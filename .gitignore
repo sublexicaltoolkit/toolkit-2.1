@@ -1,0 +1,12 @@
+# Node / build artifacts
+node_modules/
+dist/
+*.log
+
+# Env files
+.env
+.env.*
+
+# OS junk
+.DS_Store
+Thumbs.db
