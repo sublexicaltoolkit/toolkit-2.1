@@ -1,39 +1,70 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import "./EnglishToolkit.css";
+import measureCatalog from "../measure_catalog_data/measureCatalog.json";
 
+// ---------- Types ----------
+type UnitType = "PG" | "OR" | "OC" | "ONC" | "Syllable";
+type MeasureType = "Frequency" | "Consistency";
+type Directionality = "Reading" | "Spelling" | null;
+type Weighting = "Token" | "Type";
+
+type CatalogMeasure = {
+  id: string;
+  unitType: UnitType;
+  measureType: MeasureType;
+  directionality: Directionality;
+  weighting: Weighting;
+  position?: "default" | "noposition" | "freq" | null;
+  target?: string | null;
+  stat: "mean" | "median" | "max" | "min" | "sd";
+  label: string;
+  description?: string;
+};
+
+type TableRowStats = {
+  mean: boolean;
+  min: boolean;
+  max: boolean;
+  median: boolean;
+  standardDeviation: boolean;
+};
+
+type TableRowsState = Record<
+  string,
+  { selected: boolean; stats: TableRowStats; description?: string }
+>;
+
+// ---------- Helpers ----------
+function makeDisplayLabel(m: CatalogMeasure): string {
+  if (m.measureType === "Consistency") {
+    const dir = m.directionality ?? "Reading";
+    return `${m.unitType} ${dir} Consistency`;
+  }
+
+  const clean = (m.label || m.id).replace(/\.(mean|min|max|median|sd)$/i, "");
+  return clean;
+}
+
+function baseKey(m: CatalogMeasure): string {
+  // Remove stat suffix from id
+  const id = m.id
+    .replace(/\.mean$|\.min$|\.max$|\.median$|\.sd$/i, "");
+
+  return id; // every unique measure id (minus stats) is its own group
+}
+
+// ---------- Component ----------
 export default function EnglishToolkit() {
   const [fileName, setFileName] = useState<string | null>(null);
-  const [unitType, setUnitType] = useState("OC");
-  const [measureType, setMeasureType] = useState("Consistency");
-  const [directionality, setDirectionality] = useState("Spelling");
-  const [weighting, setWeighting] = useState("Type-weighted");
-  const [multiplePronunciations, setMultiplePronunciations] = useState("No");
 
-  // Each measure row has its own stats object
-  const [measures, setMeasures] = useState<
-    Record<string, { selected: boolean; stats: Record<string, boolean> }>
-  >({
-    "OC Spelling Consistency": {
-      selected: true,
-      stats: { mean: true, min: true, max: true, median: true, standardDeviation: true },
-    },
-    "OC Reading Consistency": {
-      selected: false,
-      stats: { mean: false, min: false, max: false, median: false, standardDeviation: false },
-    },
-    "OC PG Unit Freq": {
-      selected: true,
-      stats: { mean: true, min: true, max: true, median: true, standardDeviation: true },
-    },
-    "OC Grapheme Freq": {
-      selected: false,
-      stats: { mean: false, min: false, max: false, median: false, standardDeviation: false },
-    },
-    "OC Phoneme Freq": {
-      selected: false,
-      stats: { mean: false, min: false, max: false, median: false, standardDeviation: false },
-    },
-  });
+  // Multi-select state
+  const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
+  const [measureTypes, setMeasureTypes] = useState<MeasureType[]>([]);
+  const [directionalities, setDirectionalities] = useState<Exclude<Directionality, null>[]>([]);
+  const [weightings, setWeightings] = useState<Weighting[]>([]);
+  const [multiplePronunciations, setMultiplePronunciations] = useState<"Yes" | "No">("No");
+
+  const [rows, setRows] = useState<TableRowsState>({});
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -41,59 +72,101 @@ export default function EnglishToolkit() {
     }
   };
 
-  const handleMeasureToggle = (measure: string) => {
-    setMeasures((prev) => ({
+  const handleMeasureToggle = (label: string) => {
+    setRows((prev) => ({
       ...prev,
-      [measure]: { ...prev[measure], selected: !prev[measure].selected },
+      [label]: { ...prev[label], selected: !prev[label].selected },
     }));
   };
 
-  const handleStatToggle = (measure: string, stat: string) => {
-    setMeasures((prev) => ({
+  const handleStatToggle = (label: string, stat: keyof TableRowStats) => {
+    setRows((prev) => ({
       ...prev,
-      [measure]: {
-        ...prev[measure],
-        stats: { ...prev[measure].stats, [stat]: !prev[measure].stats[stat] },
+      [label]: {
+        ...prev[label],
+        stats: { ...prev[label].stats, [stat]: !prev[label].stats[stat] },
       },
     }));
   };
 
+  // -------- Apply --------
+  const handleApply = () => {
+    const filtered = (measureCatalog as CatalogMeasure[]).filter((m) =>
+      // Unit Type filter
+      (unitTypes.length === 0 || unitTypes.includes(m.unitType)) &&
+
+      // Measure Type filter
+      (measureTypes.length === 0 || measureTypes.includes(m.measureType)) &&
+
+      // Weighting filter
+      (weightings.length === 0 || weightings.includes(m.weighting)) &&
+
+      // Directionality filter: only apply if selected, but allow null (Frequency rows)
+      (
+        directionalities.length === 0 ||
+        m.directionality === null || // allow measures with no directionality (Freq)
+        directionalities.includes(m.directionality as Exclude<Directionality, null>)
+      )
+    );
+
+    
+
+    // Group by base (ignoring stat) and build table rows with stat checkboxes
+    const next: TableRowsState = {};
+    const groups = new Map<string, CatalogMeasure[]>();
+
+    for (const m of filtered) {
+      const key = baseKey(m);
+      const arr = groups.get(key) ?? [];
+      arr.push(m);
+      groups.set(key, arr);
+    }
+
+    for (const [, arr] of groups) {
+      const representative = arr[0];
+      const label = makeDisplayLabel(representative);
+
+      const stats: TableRowStats = {
+        mean: arr.some((x) => x.stat === "mean"),
+        min: arr.some((x) => x.stat === "min"),
+        max: arr.some((x) => x.stat === "max"),
+        median: arr.some((x) => x.stat === "median"),
+        standardDeviation: arr.some((x) => x.stat === "sd"),
+      };
+
+      next[label] = {
+        selected: true,
+        stats,
+        description: representative.description,
+      };
+    }
+    
+    console.log("Final groups:", Object.keys(next).length);
+    setRows(next);
+  };
+
   return (
     <main className="main-container">
-      {/* Left Column - fixed width vertical section */}
       <aside className="left-sidebar">
-        {/* Letter Input */}
         <div className="input-section">
           <h5 className="section-title">Letter Input</h5>
-          <textarea
-            className="textarea-input"
-            placeholder="Enter input here..."
-            rows={4}
-          />
+          <textarea className="textarea-input" placeholder="Enter input here..." rows={4} />
         </div>
-
-        {/* Phoneme Input */}
         <div className="input-section">
           <h5 className="section-title">Phoneme Input (optional)</h5>
-          <textarea
-            className="textarea-input"
-            placeholder="Enter input here..."
-            rows={4}
-          />
+          <textarea className="textarea-input" placeholder="Enter input here..." rows={4} />
         </div>
-
-        {/* File Upload */}
         <div className="input-section">
           <h5 className="file-upload-title">
             Upload a csv/txt file containing a list of words in the first column only:
           </h5>
           <div className="file-upload-container">
             <label className="file-upload-label">
-              <input 
-                type="file" 
-                accept=".csv,.txt" 
-                className="file-upload-input" 
-                onChange={handleFileChange} 
+              <input
+                type="file"
+                accept=".csv,.txt"
+                className="file-upload-input"
+                onChange={handleFileChange}
               />
               <div className="upload-arrow">↑</div>
               <span className="upload-text">Drag and drop files to upload</span>
@@ -105,91 +178,98 @@ export default function EnglishToolkit() {
         </div>
       </aside>
 
-      {/* Right Column - main content */}
       <section className="right-content">
         <h2 className="main-title">Variables</h2>
 
         {/* Unit Type */}
         <div className="variable-section">
           <h3 className="variable-title">Unit Type</h3>
-          <div className="radio-group">
-            {[
-              { value: "PG", label: "Phoneme-Grapheme (PG)" },
-              { value: "OR", label: "Onset-Rime (OR)" },
-              { value: "OC", label: "Onset-Coda (OC)" },
-              { value: "ONC", label: "Onset-Nucleus-Coda (ONC)" },
-              { value: "Syllable", label: "Syllable" },
-            ].map((option) => (
-              <label key={option.value} className="radio-item">
+          <div className="checkbox-group">
+            {(["PG", "OR", "OC", "ONC", "Syllable"] as UnitType[]).map((option) => (
+              <label key={option} className="checkbox-item">
                 <input
-                  type="radio"
-                  name="unitType"
-                  value={option.value}
-                  checked={unitType === option.value}
-                  onChange={(e) => setUnitType(e.target.value)}
-                  className="radio-input"
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Measure Type + Directionality */}
-        <div className="variable-section">
-          <h3 className="variable-title">Measure Type</h3>
-          <div className="radio-group">
-            {["Frequency", "Consistency"].map((option) => (
-              <label key={option} className="radio-item">
-                <input
-                  type="radio"
-                  name="measureType"
-                  value={option}
-                  checked={measureType === option}
-                  onChange={(e) => setMeasureType(e.target.value)}
-                  className="radio-input"
+                  type="checkbox"
+                  checked={unitTypes.includes(option)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setUnitTypes([...unitTypes, option]);
+                    } else {
+                      setUnitTypes(unitTypes.filter((u) => u !== option));
+                    }
+                  }}
+                  className="checkbox-input"
                 />
                 <span>{option}</span>
               </label>
             ))}
           </div>
+        </div>
 
-          <div className="directionality-section">
-            <h4 className="directionality-title">Directionality</h4>
-            <div className="radio-group">
-              {[
-                { value: "Reading", label: "Reading (Grapheme → Phoneme)" },
-                { value: "Spelling", label: "Spelling (Phoneme → Grapheme)" },
-              ].map((option) => (
-                <label key={option.value} className="radio-item">
-                  <input
-                    type="radio"
-                    name="directionality"
-                    value={option.value}
-                    checked={directionality === option.value}
-                    onChange={(e) => setDirectionality(e.target.value)}
-                    className="radio-input"
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-            </div>
+        {/* Measure Type */}
+        <div className="variable-section">
+          <h3 className="variable-title">Measure Type</h3>
+          <div className="checkbox-group">
+            {(["Frequency", "Consistency"] as MeasureType[]).map((option) => (
+              <label key={option} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={measureTypes.includes(option)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setMeasureTypes([...measureTypes, option]);
+                    } else {
+                      setMeasureTypes(measureTypes.filter((m) => m !== option));
+                    }
+                  }}
+                  className="checkbox-input"
+                />
+                <span>{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Directionality */}
+        <div className="variable-section">
+          <h3 className="variable-title">Directionality</h3>
+          <div className="checkbox-group">
+            {(["Reading", "Spelling"] as Exclude<Directionality, null>[]).map((option) => (
+              <label key={option} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={directionalities.includes(option)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setDirectionalities([...directionalities, option]);
+                    } else {
+                      setDirectionalities(directionalities.filter((d) => d !== option));
+                    }
+                  }}
+                  className="checkbox-input"
+                />
+                <span>{option}</span>
+              </label>
+            ))}
           </div>
         </div>
 
         {/* Weighting */}
         <div className="variable-section">
           <h3 className="variable-title">Weighting</h3>
-          <div className="radio-group">
-            {["Token-weighted", "Type-weighted"].map((option) => (
-              <label key={option} className="radio-item">
+          <div className="checkbox-group">
+            {(["Token", "Type"] as Weighting[]).map((option) => (
+              <label key={option} className="checkbox-item">
                 <input
-                  type="radio"
-                  name="weighting"
-                  value={option}
-                  checked={weighting === option}
-                  onChange={(e) => setWeighting(e.target.value)}
-                  className="radio-input"
+                  type="checkbox"
+                  checked={weightings.includes(option)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setWeightings([...weightings, option]);
+                    } else {
+                      setWeightings(weightings.filter((w) => w !== option));
+                    }
+                  }}
+                  className="checkbox-input"
                 />
                 <span>{option}</span>
               </label>
@@ -208,7 +288,7 @@ export default function EnglishToolkit() {
                   name="multiplePronunciations"
                   value={option}
                   checked={multiplePronunciations === option}
-                  onChange={(e) => setMultiplePronunciations(e.target.value)}
+                  onChange={(e) => setMultiplePronunciations(e.target.value as "Yes" | "No")}
                   className="radio-input"
                 />
                 <span>{option}</span>
@@ -219,7 +299,7 @@ export default function EnglishToolkit() {
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button className="action-button">Apply</button>
+          <button className="action-button" onClick={handleApply}>Apply</button>
           <button className="action-button">View Results</button>
         </div>
 
@@ -228,7 +308,6 @@ export default function EnglishToolkit() {
           <div className="statistics-header">
             <h3 className="statistics-title">Select Summary Statistics</h3>
           </div>
-
           <div className="table-container">
             <table className="statistics-table">
               <thead className="table-header">
@@ -242,31 +321,39 @@ export default function EnglishToolkit() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(measures).map(([measure, data]) => (
-                  <tr key={measure} className={`table-row ${data.selected ? "selected" : ""}`}>
+                {Object.entries(rows).map(([label, data]) => (
+                  <tr key={label} className={`table-row ${data.selected ? "selected" : ""}`}>
                     <td className="table-cell">
-                      <label className="measure-label">
+                      <label className="measure-label" title={data.description ?? ""}>
                         <input
                           type="checkbox"
                           checked={data.selected}
-                          onChange={() => handleMeasureToggle(measure)}
+                          onChange={() => handleMeasureToggle(label)}
                           className="checkbox-input"
                         />
-                        <span className="measure-text">{measure}</span>
+                        <span className="measure-text">{label}</span>
                       </label>
                     </td>
-                    {Object.keys(data.stats).map((stat) => (
-                      <td key={stat} className="table-cell center">
-                        <input
-                          type="checkbox"
-                          checked={data.stats[stat]}
-                          onChange={() => handleStatToggle(measure, stat)}
-                          className="checkbox-input"
-                        />
-                      </td>
+                    {(["mean", "min", "max", "median", "standardDeviation"] as (keyof TableRowStats)[])
+                      .map((statKey) => (
+                        <td key={statKey} className="table-cell center">
+                          <input
+                            type="checkbox"
+                            checked={data.stats[statKey]}
+                            onChange={() => handleStatToggle(label, statKey)}
+                            className="checkbox-input"
+                          />
+                        </td>
                     ))}
                   </tr>
                 ))}
+                {Object.keys(rows).length === 0 && (
+                  <tr>
+                    <td className="table-cell" colSpan={6}>
+                      Pick variables and click <strong>Apply</strong> to populate measures.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
