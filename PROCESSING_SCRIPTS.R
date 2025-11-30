@@ -2479,11 +2479,11 @@ pw_spell <- function(pronunciation, level, tables, minimum = 1, param = "pg") {
     
     vowels <- c("5", "O", "8", "je", "j3r", "ju", "jU", "o", "2", 
                 "@", "a", "e", "E", "3r", "i", "1", "c", "u", "U", "^",
-                "œ","∑","®","†","¥","ø","π","å","ß") #this line has the special cases for PW SPELL)
+                "œ","∑","®","†","ø","π","å","ß") #this line has the special cases for PW SPELL)
     
     consonants <- c("G", "gz", "kS", "nj", "C", "T", "D", "Z", "N",
                     "b", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", 
-                    "r", "s", "S", "t", "v", "w", "z")
+                    "r", "s", "S", "t", "v", "w", "z", "¥") # ¥ is /ks/ (for /ks/->x)
     
     
     syll_init_cons <- c("spl", "spr", "str", "skr", "skw", "pl", "pr", "G", "tr", "C", "tw", "kl", "kr", "kw", "bl", "br", "dr", "dw", "gl", "gr", "fl", "fr", "Tr", "Sr", "sl", "st", "sp", "sk", "sm", "sn", "sf", "bj", "fj", "vj","mj","kj","hj","nj","pj","tj","Cj","dj","Tj","Gj","gj","Sj","sj","gw")
