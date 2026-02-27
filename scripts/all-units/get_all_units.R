@@ -1,5 +1,5 @@
 # setwd("replace/with/path/to/all_unit_data")
-load("../../Toolkit_v2.0.RData")
+load("../../Toolkit_v2.1.RData")
 
 all_mappings <- rbind(syllable_initial_mappings, syllable_medial_mappings, syllable_final_mappings, word_initial_mappings, word_final_mappings)
 print(paste0("Unique phonemes: ", length(unique(all_mappings$phoneme))))

@@ -1,7 +1,7 @@
 # This script contains the tools and functions necessary to generate a spanning table of all
 # Toolkit units for a corpus of words. An example using the Toolkit's preprocessed datasets
 # is shown.
-load("Toolkit_v2.0.RData")
+load("Toolkit_v2.1.RData")
 
 ### PRELIMINARIES ###
 
@@ -185,5 +185,5 @@ extract_units_at_level <- function(wordlist, level) {
 # Replace this with your own wordlist. If supplying your own wordlist, the functions below assume
 # your wordlist has columns "spelling", "pronunciation", "freq", and "syllables", all of equal
 # length.
-wordlist <- wordlist_v2_0
+wordlist <- wordlist_v2_1_merged
 

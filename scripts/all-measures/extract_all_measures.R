@@ -1,11 +1,10 @@
 # setwd("Replace this string with the path to the all-measures directory of this repo and uncomment")
 # The Toolkit only needs to be loaded once
-load("../../Toolkit_v2.0.RData")
+load("../../Toolkit_v2.1.RData")
 
 ### SOME NOTES:
 # If you are supplying your own datasets/corpus, adjust the names of the datasets in the grain_sizes and weight_options lists. The
 # functions in this script will be concatenating values in these two lists in order to get the name of your dataset.
-# See the TODO script in TODO location for generating datasets like the scored_words family that can be passed into the functions here. (this is coming soon)
 
 # Edit any one of these lists to only obtain those measures.
 # Pass reuslts into extract_master_list_measures.py to filter for desired words after

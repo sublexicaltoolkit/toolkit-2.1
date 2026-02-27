@@ -1,6 +1,6 @@
 # setwd("Replace this string with the path to the batch-mapping directory of this repo and uncomment")
 # The Toolkit only needs to be loaded once
-load("../../Toolkit_v2.0.RData")
+load("../../Toolkit_v2.1.RData")
 
 # This script outlines the pipeline for mapping spellings and pronunciations with optional prefedined frequencies through
 # the map_GRAIN -> make_tables -> map_value pipeline.

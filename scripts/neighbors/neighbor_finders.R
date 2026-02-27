@@ -1,7 +1,7 @@
 library(stringdist)
 
-# Must have the 2.0 toolkit environment loaded
-# load("path/to/Toolkit_v2.0.RData")
+# Must have the 2.1 toolkit environment loaded
+# load("path/to/Toolkit_v2.1.RData")
 
 # Function from Bob to compute edit-distance matrices between
 # two words
@@ -43,8 +43,8 @@ get_orthographic_neighbors <- function(item_spellings, item_pronunciations, type
 
     if (type == "letter"){
         for(j in 1:nitems){
-        mydists <- stringdist(item_spellings[j],wordlist_v2_0$spelling) #find letter distance between the target and every real word in the v2.0 list
-        neighbors[[j]] <- wordlist_v2_0[which(mydists<=maxdist),] #select just the real words that are within the maximum allowed distance
+        mydists <- stringdist(item_spellings[j],wordlist_v2_1_merged$spelling) #find letter distance between the target and every real word in the v2.0 list
+        neighbors[[j]] <- wordlist_v2_1_merged[which(mydists<=maxdist),] #select just the real words that are within the maximum allowed distance
         }
     } else {
         level_table <- switch(type,
@@ -68,7 +68,7 @@ get_orthographic_neighbors <- function(item_spellings, item_pronunciations, type
                 lexicongraphemes <- level_table[[1]][[i]][2,] #extract graphemes
                 mydists[i] <- edit_distance_matrices(mygraphemes1,lexicongraphemes) #compute the distance between the target's graphemes and this word's graphemes
             }
-            neighbors[[j]] <- wordlist_v2_0[which(mydists<=maxdist),]  #select just the real words that are within the maximum allowed distance
+            neighbors[[j]] <- wordlist_v2_1_merged[which(mydists<=maxdist),]  #select just the real words that are within the maximum allowed distance
         }
     }
     return(neighbors)
@@ -99,7 +99,7 @@ get_phonological_neighbors <- function(item_spellings, item_pronunciations, type
             lexiconphonemes <- level_table[[1]][[i]][1,] # extract phonemes
             mydists[i] <- edit_distance_matrices(myphonemes1,lexiconphonemes) #compute the distance between the target's phonemes and phonemes of this word
         }
-        neighbors[[j]] <- wordlist_v2_0[which(mydists<=maxdist),]  #select just the real words that are within the maximum allowed distance
+        neighbors[[j]] <- wordlist_v2_1_merged[which(mydists<=maxdist),]  #select just the real words that are within the maximum allowed distance
     }
 
     return(neighbors)
