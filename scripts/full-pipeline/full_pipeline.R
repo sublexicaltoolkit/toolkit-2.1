@@ -1,6 +1,6 @@
 # setwd("Replace this string with the path to the full-pipeline directory of this repo and uncomment")
 # The Toolkit only needs to be loaded once
-load("../../Toolkit_v2.0.RData")
+load("../../Toolkit_v2.1.RData")
 
 # By default, this script generates the all_words, all_tables, and scored_words family of datasets,
 # and write them to an output csv.
@@ -9,9 +9,9 @@ load("../../Toolkit_v2.0.RData")
 # All functions within are taken from scripts/all-measures/extract_all_measures.R and 
 # scripts/batch-mapping/batch_mapping_pipeline.R
 
-spellings <- wordlist_v2_0$spelling
-pronunciations <- wordlist_v2_0$pronunciation
-freq_weights <- wordlist_v2_0$freq
+spellings <- wordlist_v2_1_merged$spelling
+pronunciations <- wordlist_v2_1_merged$pronunciation
+freq_weights <- wordlist_v2_1_merged$freq
 
 mapped_words_output_name <- "all_words"
 made_tables_output_name <- "all_tables"
