@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 
 type LayoutProps = {
   children: React.ReactNode;
-  variant?: "home" | "app";
+  variant?: "home" | "about" | "app";
 };
 
 export default function Layout({ children, variant = "home" }: LayoutProps) {
@@ -12,6 +12,9 @@ export default function Layout({ children, variant = "home" }: LayoutProps) {
         <div className="nav-inner">
           <NavLink to="/" end className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>
             Home
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>
+            About
           </NavLink>
           <NavLink to="/english" className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>
             English Toolkit
