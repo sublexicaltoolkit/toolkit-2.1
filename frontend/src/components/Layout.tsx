@@ -38,7 +38,7 @@ export default function Layout({ children, variant = "home" }: LayoutProps) {
             <p className="footer-heading">Other</p>
             <a href="#privacy">Privacy Policy</a>
             <a href="#terms">Terms and Conditions</a>
-            <a href="#about">About</a>
+            <NavLink to="/about">About</NavLink>
           </div>
         </div>
       </footer>

@@ -216,6 +216,135 @@ body {
   font-size: 14px;
 }
 
+.about-intro {
+  text-align: center;
+  max-width: 720px;
+  margin: 48px auto 72px;
+}
+
+.about-title {
+  font-size: clamp(40px, 6vw, 56px);
+  margin: 0 0 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.about-lead,
+.about-body {
+  margin: 0 0 16px;
+  color: #374151;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.about-section {
+  margin: 0 auto 80px;
+  max-width: 860px;
+}
+
+.about-heading {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pub-list {
+  display: grid;
+  gap: 16px;
+}
+
+.pub-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 24px;
+  border-radius: 999px;
+  background: #d9eef8;
+  color: #111111;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(80, 140, 180, 0.12);
+}
+
+.pub-bubble:hover {
+  filter: brightness(0.98);
+}
+
+.pub-title {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.pub-authors,
+.pub-source {
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.person-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 28px 16px;
+  justify-items: center;
+}
+
+.person-card {
+  text-align: center;
+  max-width: 160px;
+}
+
+.person-avatar {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #9fd3f2;
+  color: #1d4f73;
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.person-name {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.person-role {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.dev-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dev-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  font-size: 15px;
+}
+
+.dev-list span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
 @media (max-width: 720px) {
   .footer {
     border-radius: 32px 32px 0 0;
@@ -223,5 +352,8 @@ body {
   }
   .footer-inner {
     grid-template-columns: 1fr;
+  }
+  .pub-bubble {
+    border-radius: 24px;
   }
 }
