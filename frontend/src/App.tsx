@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import EnglishToolkit from "./pages/EnglishToolkit";
-import ResultsPlaceholder from "./pages/ResultsPlaceholder";
 import ToolkitSelect from "./pages/ToolkitSelect";
+import ToolkitResults from "./pages/ToolkitResults";
 import "./index.css";
 
 export default function App() {
@@ -19,12 +19,7 @@ export default function App() {
         />
         <Route
           path="/english/frequency-consistency/results"
-          element={
-            <ResultsPlaceholder
-              title="Frequency & Consistency"
-              searchPath="/english/frequency-consistency/search"
-            />
-          }
+          element={<ToolkitResults variant="frequency-consistency" />}
         />
         <Route
           path="/english/phonology-orthography/search"
@@ -32,23 +27,11 @@ export default function App() {
         />
         <Route
           path="/english/phonology-orthography/results/standard"
-          element={
-            <ResultsPlaceholder
-              title="Phonology & Orthography"
-              format="Standard (no onset/rime sorting)"
-              searchPath="/english/phonology-orthography/search"
-            />
-          }
+          element={<ToolkitResults variant="standard" />}
         />
         <Route
           path="/english/phonology-orthography/results/onset-rime"
-          element={
-            <ResultsPlaceholder
-              title="Phonology & Orthography"
-              format="Onset/rime sorted"
-              searchPath="/english/phonology-orthography/search"
-            />
-          }
+          element={<ToolkitResults variant="onset-rime" />}
         />
       </Routes>
     </BrowserRouter>

@@ -136,6 +136,8 @@ export default function EnglishToolkit({
 }: EnglishToolkitProps) {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState<string | null>(null);
+  const [letterInput, setLetterInput] = useState("");
+  const [phonemeInput, setPhonemeInput] = useState("");
 
   // Multi-select state
   const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
@@ -249,8 +251,32 @@ export default function EnglishToolkit({
   };
 
   const handleViewResults = () => {
+    const selectedMeasures = Object.entries(rows)
+      .filter(([, data]) => data.selected)
+      .map(([label]) => label);
+    const pendingPhonologyMeasures = phonologyOptions.map((optionId) =>
+      optionId.replace("::", " — "),
+    );
+    const searchState = {
+      words: letterInput
+        .split(/[\n,]+/)
+        .map((word) => word.trim())
+        .filter(Boolean),
+      phonemes: phonemeInput
+        .split(/[\n,]+/)
+        .map((phoneme) => phoneme.trim())
+        .filter(Boolean),
+      measures:
+        selectedMeasures.length > 0
+          ? selectedMeasures
+          : mode === "phonology-orthography"
+            ? pendingPhonologyMeasures
+            : [],
+      multiplePronunciations,
+    };
+
     if (mode === "frequency-consistency") {
-      navigate("/english/frequency-consistency/results");
+      navigate("/english/frequency-consistency/results", { state: searchState });
       return;
     }
 
@@ -258,6 +284,7 @@ export default function EnglishToolkit({
       phonologyFormat === "onset-rime"
         ? "/english/phonology-orthography/results/onset-rime"
         : "/english/phonology-orthography/results/standard",
+      { state: searchState },
     );
   };
 
@@ -267,11 +294,23 @@ export default function EnglishToolkit({
       <aside className="left-sidebar">
         <div className="input-section">
           <h5 className="section-title">Letter Input</h5>
-          <textarea className="textarea-input" placeholder="Enter input here..." rows={4} />
+          <textarea
+            className="textarea-input"
+            placeholder="Enter input here..."
+            rows={4}
+            value={letterInput}
+            onChange={(event) => setLetterInput(event.target.value)}
+          />
         </div>
         <div className="input-section">
           <h5 className="section-title">Phoneme Input (optional)</h5>
-          <textarea className="textarea-input" placeholder="Enter input here..." rows={4} />
+          <textarea
+            className="textarea-input"
+            placeholder="Enter input here..."
+            rows={4}
+            value={phonemeInput}
+            onChange={(event) => setPhonemeInput(event.target.value)}
+          />
         </div>
         <div className="input-section">
           <h5 className="file-upload-title">
