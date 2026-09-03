@@ -88,6 +88,7 @@
   width: 384px; /* 24rem equivalent */
   flex-shrink: 0;
   height: 100vh;
+  overflow-y: auto;
   background-color: #cbd5e1; /* slate-300 */
   padding: 1.5rem;
   display: flex;
@@ -193,6 +194,16 @@
   color: #374151;
 }
 
+.sidebar-options {
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(31, 41, 55, 0.18);
+}
+
+.sidebar-radio-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
 .main-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -207,6 +218,46 @@
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.measure-option-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.measure-option-group {
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid #dbe3ec;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.measure-option-group legend {
+  padding: 0 0.5rem;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.measure-option-list {
+  display: grid;
+  gap: 0.75rem;
 }
 
 .radio-group {
@@ -331,6 +382,10 @@
 /* Responsive design */
 @media (max-width: 768px) {
   .search-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .measure-option-groups {
     grid-template-columns: 1fr;
   }
 
