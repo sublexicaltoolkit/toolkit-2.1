@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./EnglishToolkit.css";
 import measureCatalog from "../measure_catalog_data/measureCatalog.json";
 import Layout from "../components/Layout";
@@ -35,6 +36,10 @@ type TableRowsState = Record<
   { selected: boolean; stats: TableRowStats; description?: string }
 >;
 
+type EnglishToolkitProps = {
+  mode?: "frequency-consistency" | "phonology-orthography";
+};
+
 // ---------- Helpers ----------
 function makeDisplayLabel(m: CatalogMeasure): string {
   if (m.measureType === "Consistency") {
@@ -55,7 +60,10 @@ function baseKey(m: CatalogMeasure): string {
 }
 
 // ---------- Component ----------
-export default function EnglishToolkit() {
+export default function EnglishToolkit({
+  mode = "frequency-consistency",
+}: EnglishToolkitProps) {
+  const navigate = useNavigate();
   const [fileName, setFileName] = useState<string | null>(null);
 
   // Multi-select state
@@ -64,6 +72,7 @@ export default function EnglishToolkit() {
   const [directionalities, setDirectionalities] = useState<Exclude<Directionality, null>[]>([]);
   const [weightings, setWeightings] = useState<Weighting[]>([]);
   const [multiplePronunciations, setMultiplePronunciations] = useState<"Yes" | "No">("No");
+  const [phonologyFormat, setPhonologyFormat] = useState<"standard" | "onset-rime">("standard");
 
   const [rows, setRows] = useState<TableRowsState>({});
 
@@ -146,6 +155,19 @@ export default function EnglishToolkit() {
     setRows(next);
   };
 
+  const handleViewResults = () => {
+    if (mode === "frequency-consistency") {
+      navigate("/english/frequency-consistency/results");
+      return;
+    }
+
+    navigate(
+      phonologyFormat === "onset-rime"
+        ? "/english/phonology-orthography/results/onset-rime"
+        : "/english/phonology-orthography/results/standard",
+    );
+  };
+
   return (
     <Layout variant="app">
     <main className="main-container">
@@ -181,6 +203,11 @@ export default function EnglishToolkit() {
       </aside>
 
       <section className="right-content">
+        <p className="search-page-type">
+          {mode === "frequency-consistency"
+            ? "Frequency & Consistency"
+            : "Phonology & Orthography"}
+        </p>
         <h2 className="main-title">Variables</h2>
 
         {/* Unit Type */}
@@ -299,10 +326,36 @@ export default function EnglishToolkit() {
           </div>
         </div>
 
+        {mode === "phonology-orthography" && (
+          <div className="variable-section">
+            <h3 className="variable-title">Results Format</h3>
+            <div className="radio-group">
+              {[
+                ["standard", "Standard (no onset/rime sorting)"],
+                ["onset-rime", "Onset/rime sorted"],
+              ].map(([value, label]) => (
+                <label key={value} className="radio-item">
+                  <input
+                    type="radio"
+                    name="phonologyFormat"
+                    value={value}
+                    checked={phonologyFormat === value}
+                    onChange={() =>
+                      setPhonologyFormat(value as "standard" | "onset-rime")
+                    }
+                    className="radio-input"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="action-buttons">
           <button className="action-button" onClick={handleApply}>Apply</button>
-          <button className="action-button">View Results</button>
+          <button className="action-button" onClick={handleViewResults}>View Results</button>
         </div>
 
         {/* Summary Statistics */}

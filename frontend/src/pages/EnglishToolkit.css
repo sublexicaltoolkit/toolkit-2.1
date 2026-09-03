@@ -6,6 +6,84 @@
   padding: 0;
 }
 
+.toolkit-select,
+.results-placeholder {
+  width: min(960px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 72px 0 140px;
+  flex: 1;
+}
+
+.toolkit-select-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.toolkit-select-header h1,
+.results-placeholder h1 {
+  margin: 0 0 12px;
+  font-size: clamp(36px, 5vw, 52px);
+}
+
+.toolkit-select-header p,
+.results-placeholder p {
+  color: #4b5563;
+}
+
+.search-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.search-option-card {
+  min-height: 220px;
+  padding: 32px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.search-option-card h2 {
+  margin: 0 0 12px;
+}
+
+.search-option-card p {
+  margin: 0 0 28px;
+  color: #4b5563;
+}
+
+.search-option-link {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: auto;
+  text-decoration: none;
+}
+
+.results-placeholder {
+  text-align: center;
+}
+
+.results-placeholder .search-option-link {
+  margin-top: 24px;
+}
+
+.route-label,
+.search-page-type {
+  margin: 0 0 8px;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.results-format {
+  font-weight: 600;
+}
+
 .left-sidebar {
   width: 384px; /* 24rem equivalent */
   flex-shrink: 0;
@@ -252,6 +330,10 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .search-option-grid {
+    grid-template-columns: 1fr;
+  }
+
   .main-container {
     flex-direction: column;
   }
