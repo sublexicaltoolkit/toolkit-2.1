@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import "./EnglishToolkit.css";
 import measureCatalog from "../measure_catalog_data/measureCatalog.json";
+import Layout from "../components/Layout";
 
 // ---------- Types ----------
 type UnitType = "PG" | "OR" | "OC" | "ONC" | "Syllable";
@@ -146,6 +147,7 @@ export default function EnglishToolkit() {
   };
 
   return (
+    <Layout variant="app">
     <main className="main-container">
       <aside className="left-sidebar">
         <div className="input-section">
@@ -360,5 +362,6 @@ export default function EnglishToolkit() {
         </div>
       </section>
     </main>
+    </Layout>
   );
 }

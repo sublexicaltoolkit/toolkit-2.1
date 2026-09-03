@@ -24,6 +24,10 @@ body {
   background: linear-gradient(180deg, #d4eaf6 0%, #f7fbfe 28%, #ffffff 50%, #f7fbfe 72%, #d4eaf6 100%);
 }
 
+.page-app {
+  background: #f4f4f4;
+}
+
 .nav {
   position: sticky;
   top: 0;
