@@ -250,6 +250,167 @@
   margin-left: 0.25rem;
 }
 
+/* =========================
+   Modal Overlay
+========================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+
+  backdrop-filter: blur(4px);
+}
+
+/* =========================
+   Modal Card
+========================= */
+
+.results-modal {
+  width: 90%;
+  max-width: 1200px;
+  height: 80vh;
+
+  background: white;
+  border-radius: 18px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.15);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  animation: modalFadeIn 0.25s ease;
+}
+
+/* =========================
+   Header
+========================= */
+
+.modal-header {
+  padding: 20px 24px;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.modal-header p {
+  margin-top: 4px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   Close Button
+========================= */
+
+.modal-close {
+  width: 40px;
+  height: 40px;
+
+  border: none;
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  background: #f3f4f6;
+
+  font-size: 18px;
+
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+/* =========================
+   Body
+========================= */
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.modal-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 16px 24px;
+
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* =========================
+   Table
+========================= */
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table th {
+  position: sticky;
+  top: 0;
+
+  background: #f8fafc;
+
+  padding: 12px;
+
+  text-align: left;
+
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.results-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.results-table tr:hover {
+  background: #f8fafc;
+}
+
+/* =========================
+   Animation
+========================= */
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .main-container {
@@ -264,4 +425,131 @@
   .right-content {
     height: auto;
   }
+}
+/* ============================================================
+   Append everything below into your existing EnglishToolkit.css.
+   Styles the new "View Results" page to match the target layout:
+   nav pills, dark title bar, slate table headers, homograph cells.
+   ============================================================ */
+
+.results-page {
+  min-height: 100vh;
+  background: #faf6f1;
+  padding-bottom: 48px;
+}
+
+.results-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 0;
+}
+
+.nav-tab {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: #f1efec;
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-tab-active {
+  background: #6c9bd1;
+  color: #fff;
+}
+
+.results-title-bar {
+  background: #333333;
+  padding: 22px 40px;
+}
+
+.results-title-bar h1 {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.results-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.results-error {
+  background: #fdecea;
+  color: #b3261e;
+  border: 1px solid #f5c2c0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.results-main-table thead th {
+  background: #6b7889;
+  color: #fff;
+  text-align: center;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.results-main-table .word-inputs-col {
+  text-align: left;
+  min-width: 140px;
+}
+
+.results-main-table tbody tr:nth-child(even) {
+  background: #f7f5f2;
+}
+
+.results-main-table .word-cell {
+  text-align: left;
+  font-weight: 500;
+}
+
+.word-index {
+  display: inline-block;
+  width: 20px;
+  color: #888;
+  font-weight: 400;
+}
+
+.homograph-cell {
+  font-style: italic;
+  color: #666;
+}
+
+.results-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.back-button {
+  background: #111;
+  color: #fff;
+}
+
+/* Reuse of existing .statistics-container / .statistics-table classes
+   already covers the two-header slate style and light subheader row
+   seen in the mock — no changes needed there beyond what's above. */
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #1f2937;
 }
