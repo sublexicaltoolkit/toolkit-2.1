@@ -55,13 +55,24 @@ function escapeCsv(value: string) {
 export default function ToolkitResults({ variant }: ToolkitResultsProps) {
   const location = useLocation();
   const state = (location.state ?? {}) as ResultsState;
+  const isDemo = new URLSearchParams(location.search).has("demo");
   const config = resultConfig[variant];
   const measures =
     state.measures && state.measures.length > 0
       ? state.measures
       : config.fallbackMeasures;
-  const words = state.words ?? [];
-  const phonemes = state.phonemes ?? [];
+  const words =
+    state.words && state.words.length > 0
+      ? state.words
+      : isDemo
+        ? ["cat", "light", "school"]
+        : [];
+  const phonemes =
+    state.phonemes && state.phonemes.length > 0
+      ? state.phonemes
+      : isDemo
+        ? ["/kæt/", "/laɪt/", "/skuːl/"]
+        : [];
   const rowCount = Math.max(words.length, phonemes.length);
   const hasOnsetRimeColumns = variant === "onset-rime";
   const inputColumnCount = hasOnsetRimeColumns ? 4 : 2;
@@ -101,6 +112,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
               Multiple pronunciations:{" "}
               <strong>{state.multiplePronunciations ?? "No"}</strong>
             </p>
+            {isDemo && <span className="demo-badge">Demo data</span>}
           </div>
 
           <div className="results-actions">
@@ -148,12 +160,16 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                       <td>{phonemes[index] || "—"}</td>
                       {hasOnsetRimeColumns && (
                         <>
-                          <td>—</td>
-                          <td>—</td>
+                          <td>{isDemo ? ["k", "l", "sk"][index] : "—"}</td>
+                          <td>{isDemo ? ["æt", "aɪt", "uːl"][index] : "—"}</td>
                         </>
                       )}
-                      {measures.map((measure) => (
-                        <td key={measure}>—</td>
+                      {measures.map((measure, measureIndex) => (
+                        <td key={measure}>
+                          {isDemo
+                            ? (0.42 + index * 0.11 + measureIndex * 0.07).toFixed(2)
+                            : "—"}
+                        </td>
                       ))}
                     </tr>
                   ))

@@ -15,9 +15,15 @@ body {
 
 .page-home {
   background:
-    radial-gradient(ellipse 420px 280px at 50% 220px, rgba(170, 210, 245, 0.55), transparent 70%),
-    radial-gradient(ellipse 380px 260px at 50% 720px, rgba(255, 214, 170, 0.45), transparent 70%),
-    #f4f4f4;
+    radial-gradient(ellipse 430px 300px at 50% 735px, rgba(145, 203, 240, 0.42), transparent 72%),
+    linear-gradient(
+      180deg,
+      #cbe5f5 0%,
+      #e3f1f9 18%,
+      #f2f7fa 36%,
+      #f4f4f4 58%,
+      #f4f4f4 100%
+    );
 }
 
 .page-about {
@@ -57,7 +63,7 @@ body {
 }
 
 .nav-tab.active {
-  background: #d7e14a;
+  background: #9fcfe9;
   color: #111111;
 }
 
@@ -98,9 +104,9 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 22px;
-  background: #9fd3f2;
-  color: #1d4f73;
-  box-shadow: 0 10px 24px rgba(80, 140, 180, 0.18);
+  background: #d9dde0;
+  color: #2f82b7;
+  box-shadow: 0 10px 24px rgba(75, 85, 99, 0.16);
 }
 
 .hero-arrow {
@@ -134,7 +140,9 @@ body {
   background: #ffffff;
   border-radius: 18px;
   padding: 22px 22px 24px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.08),
+    0 0 44px rgba(113, 188, 234, 0.24);
   display: flex;
   flex-direction: column;
 }

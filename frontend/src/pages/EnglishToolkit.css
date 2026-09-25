@@ -405,6 +405,19 @@
   color: #4b5563;
 }
 
+.demo-badge {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .results-actions {
   display: flex;
   flex-shrink: 0;
