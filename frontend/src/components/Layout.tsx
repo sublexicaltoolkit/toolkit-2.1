@@ -4,12 +4,14 @@ type LayoutProps = {
   children: React.ReactNode;
   variant?: "home" | "about" | "app" | "select";
   pageTitle?: string;
+  pageIntro?: string;
 };
 
 export default function Layout({
   children,
   variant = "home",
   pageTitle,
+  pageIntro,
 }: LayoutProps) {
   return (
     <div className={`page page-${variant}`}>
@@ -28,10 +30,18 @@ export default function Layout({
       </nav>
 
       {pageTitle && (
-        <header className="page-title-bar">
+        <header
+          className={`page-title-bar${pageIntro ? " page-title-bar-instructions" : ""}`}
+        >
           <div className="page-title-bar-inner">
-            <p>{pageTitle}</p>
-            <a href="#how-to-use">How to Use</a>
+            {pageIntro ? (
+              <>
+                <h2>{pageTitle}</h2>
+                <p>{pageIntro}</p>
+              </>
+            ) : (
+              <p>{pageTitle}</p>
+            )}
           </div>
         </header>
       )}

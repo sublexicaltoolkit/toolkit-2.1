@@ -40,6 +40,9 @@ type EnglishToolkitProps = {
   mode?: "frequency-consistency" | "phonology-orthography";
 };
 
+const toolkitInstructions =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
+
 const phonologyOptionGroups = [
   {
     title: "General",
@@ -291,11 +294,8 @@ export default function EnglishToolkit({
   return (
     <Layout
       variant="app"
-      pageTitle={
-        mode === "frequency-consistency"
-          ? "Frequency & Consistency"
-          : "Phonology & Orthography"
-      }
+      pageTitle="How to use this toolkit:"
+      pageIntro={toolkitInstructions}
     >
     <main className="main-container">
       <aside className="left-sidebar">
@@ -391,11 +391,6 @@ export default function EnglishToolkit({
       </aside>
 
       <section className="right-content">
-        <p className="search-page-type">
-          {mode === "frequency-consistency"
-            ? "Frequency & Consistency"
-            : "Phonology & Orthography"}
-        </p>
         <h2 className="main-title">Variables</h2>
 
         {mode === "frequency-consistency" ? (

@@ -93,40 +93,44 @@ body {
 
 .page-title-bar {
   width: 100%;
-  margin-top: 14px;
-  background: #111111;
+  background: #3a3a3a;
   color: #ffffff;
 }
 
 .page-title-bar-inner {
-  width: min(1400px, calc(100% - 48px));
-  min-height: 68px;
+  width: 100%;
+  min-height: 48px;
   margin: 0 auto;
+  padding: 0 30px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
 }
 
 .page-title-bar p {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.page-title-bar a {
-  padding: 9px 17px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  text-decoration: none;
 }
 
-.page-title-bar a:hover {
-  background: #ffffff;
-  color: #111111;
+.page-title-bar-instructions .page-title-bar-inner {
+  min-height: 110px;
+  padding-top: 18px;
+  padding-bottom: 22px;
+  display: block;
+}
+
+.page-title-bar-instructions h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.page-title-bar-instructions p {
+  max-width: 1180px;
+  color: #f1f1f1;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
 .container {
@@ -422,11 +426,14 @@ body {
     white-space: nowrap;
   }
   .page-title-bar-inner {
-    width: calc(100% - 32px);
-    min-height: 60px;
+    min-height: 44px;
+    padding: 0 18px;
   }
   .page-title-bar p {
-    font-size: 17px;
+    font-size: 11px;
+  }
+  .page-title-bar-instructions .page-title-bar-inner {
+    padding: 16px 18px 18px;
   }
   .footer {
     border-radius: 32px 32px 0 0;

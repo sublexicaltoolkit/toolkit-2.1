@@ -382,32 +382,28 @@
 .results-page {
   width: min(1400px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 56px 0 140px;
+  padding: 24px 0 140px;
   flex: 1;
 }
 
 .results-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
-.results-header h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
-  letter-spacing: -0.03em;
-}
-
-.results-header p:not(.route-label) {
-  margin: 0.75rem 0 0;
+.results-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   color: #4b5563;
+  font-size: 0.8125rem;
 }
 
 .demo-badge {
   display: inline-block;
-  margin-top: 0.75rem;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   background: #fef3c7;
@@ -444,7 +440,7 @@
 }
 
 .results-table-heading {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;

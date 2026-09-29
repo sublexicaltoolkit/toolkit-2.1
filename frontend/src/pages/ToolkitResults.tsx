@@ -21,7 +21,7 @@ const resultConfig: Record<
 > = {
   "frequency-consistency": {
     eyebrow: "Frequency & Consistency",
-    title: "Frequency and Consistency Results",
+    title: "Frequency and Consistency Log Results",
     searchPath: "/english/frequency-consistency/search",
     fallbackMeasures: ["Frequency", "Contextual Diversity", "PG Consistency"],
   },
@@ -102,16 +102,14 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
   };
 
   return (
-    <Layout variant="app" pageTitle={config.eyebrow}>
+    <Layout variant="app" pageTitle={config.title}>
       <main className="results-page">
         <header className="results-header">
-          <div>
-            <p className="route-label">{config.eyebrow}</p>
-            <h1>{config.title}</h1>
-            <p>
+          <div className="results-meta">
+            <span>
               Multiple pronunciations:{" "}
               <strong>{state.multiplePronunciations ?? "No"}</strong>
-            </p>
+            </span>
             {isDemo && <span className="demo-badge">Demo data</span>}
           </div>
 
