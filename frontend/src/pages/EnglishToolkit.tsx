@@ -289,7 +289,14 @@ export default function EnglishToolkit({
   };
 
   return (
-    <Layout variant="app">
+    <Layout
+      variant="app"
+      pageTitle={
+        mode === "frequency-consistency"
+          ? "Frequency & Consistency"
+          : "Phonology & Orthography"
+      }
+    >
     <main className="main-container">
       <aside className="left-sidebar">
         <div className="input-section">

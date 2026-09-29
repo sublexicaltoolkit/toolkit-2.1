@@ -102,7 +102,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
   };
 
   return (
-    <Layout variant="app">
+    <Layout variant="app" pageTitle={config.eyebrow}>
       <main className="results-page">
         <header className="results-header">
           <div>

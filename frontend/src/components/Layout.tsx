@@ -2,10 +2,15 @@ import { NavLink } from "react-router-dom";
 
 type LayoutProps = {
   children: React.ReactNode;
-  variant?: "home" | "about" | "app";
+  variant?: "home" | "about" | "app" | "select";
+  pageTitle?: string;
 };
 
-export default function Layout({ children, variant = "home" }: LayoutProps) {
+export default function Layout({
+  children,
+  variant = "home",
+  pageTitle,
+}: LayoutProps) {
   return (
     <div className={`page page-${variant}`}>
       <nav className="nav" aria-label="Primary">
@@ -22,6 +27,15 @@ export default function Layout({ children, variant = "home" }: LayoutProps) {
         </div>
       </nav>
 
+      {pageTitle && (
+        <header className="page-title-bar">
+          <div className="page-title-bar-inner">
+            <p>{pageTitle}</p>
+            <a href="#how-to-use">How to Use</a>
+          </div>
+        </header>
+      )}
+
       {children}
 
       <footer className="footer">
@@ -29,7 +43,6 @@ export default function Layout({ children, variant = "home" }: LayoutProps) {
           <div className="footer-brand">
             <p className="footer-title">Sublexical Toolkit</p>
             <p className="footer-copy">Copyright 2024</p>
-            <p className="footer-credit">Icons by Icons8</p>
           </div>
 
           <div className="footer-col">
@@ -43,6 +56,9 @@ export default function Layout({ children, variant = "home" }: LayoutProps) {
             <a href="#terms">Terms and Conditions</a>
             <NavLink to="/about">About</NavLink>
           </div>
+        </div>
+        <div className="footer-bottom">
+          <p className="footer-credit">Icons by Icons8</p>
         </div>
       </footer>
     </div>

@@ -17,7 +17,7 @@ const searchPages = [
 
 export default function ToolkitSelect() {
   return (
-    <Layout variant="app">
+    <Layout variant="select" pageTitle="English Toolkit">
       <main className="toolkit-select">
         <header className="toolkit-select-header">
           <h1>English Toolkit</h1>
