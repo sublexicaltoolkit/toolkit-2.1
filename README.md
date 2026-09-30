@@ -54,10 +54,10 @@ See `scripts/` for more detailed examples, and `toolkit-guide.pdf` for full docu
 
 # Version 2.1 updates
 
-- Merged wordlist: `wordlist_v2_1_merged` (22,257 words, replaces `wordlist_v2_0`).
-- `summarize_words()` gains `mode = "ONC"` parameter for onset/nucleus/coda breakdown.
-- New function: `visualize_parse_tree()` for visualizing how a spelling can be parsed.
-- `pw_spell()` and `pw_read()` use simplified `min_map` parameter (replaces `min_pp`/`min_gp`/`mean_gp`).
+- New wordlist: `wordlist_v2_1_merged` (22,257 words, replaces `wordlist_v2_0`) (caught/cot merger).
+- `summarize_words()` gains `mode = "ONC"` parameter for by-onset/nucleus/coda measure breakdown.
+- New function: `visualize_parse_tree()` for graph visualizations of valid parsings given spellings.
+- `pw_spell()` and `pw_read()` use simplified `min_map` parameter (replaces `min_pp`/`min_gp`/`mean_gp`), and resemble each other in structure.
 
 # Version 2.0 updates
 
