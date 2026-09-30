@@ -1,0 +1,9 @@
+# Normalise line endings to lf
+* text=auto eol=lf
+*.R    text eol=lf
+*.md   text eol=lf
+*.csv  text eol=lf
+
+# Binaries
+*.RData binary
+*.pdf   binary
