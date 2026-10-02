@@ -1,73 +1,40 @@
-# summarize_words Usage Examples
-# Demonstrates the default and ONC modes of summarize_words.
+# TOOD add toolkit guide section
+# 
+# summarize_words computes the summary statistics (mean, median, max, min, sd) 
+# for on measure from "PG", "GP", "PG_freq", "P_freq", and "G_freq", or a 
+# parsing measure ("pp", "pp_count", "pp2", "pp2_count"), across the units for
+# a word. See the Toolkit guide for descriptions.
 #
-# summarize_words computes summary statistics (mean, median, max, min, sd)
-# for a chosen measure across all units in a word.
-#
-# In default mode, statistics are computed across all units.
-# In ONC mode, statistics are broken down by syllabic position:
-#   onset, nucleus, and coda.
+# mode = "default" summarizes across all units of the word.
+# mode = "ONC" gives separate statistics for the  onset, nucleus, and coda units
+# within a word. Note that parsing measures are only available in default mode.
 
-# setwd("replace/with/path/to/summarize-words")
+# setwd("<path to scripts/summarize-words>")
 load("../../Toolkit_v2.1.RData")
 
-# ===========================================================================
-# Default Mode
-# ===========================================================================
+# We can take the following two words, processed by map_value already and in
+# the scored_words dataset, as examples:
+toolkit <- scored_words_PG[which(wordlist_v2_1_merged$spelling == "toolkit")]
+penguin <- scored_words_PG[which(wordlist_v2_1_merged$spelling == "penguin")]
 
-# Summarize spelling consistency (PG) for a single word:
-summarize_words(
-  mapped_words = scored_words_PG[
-    which(wordlist_v2_1_merged$spelling == "toolkit")],
-  parameter = "PG")
+# Default: 
 
-# Summarize reading consistency (GP) for a single word:
-summarize_words(
-  mapped_words = scored_words_PG[
-    which(wordlist_v2_1_merged$spelling == "toolkit")],
-  parameter = "GP")
+# Spelling consistency (PG) of "toolkit":
+summarize_words(mapped_words = toolkit, parameter = "PG")
 
-# Summarize across the entire corpus:
-all_words_PG_probability <- summarize_words(
-  mapped_words = scored_words_PG,
-  parameter = "PG")
-head(all_words_PG_probability)
+# Reading consistency (GP) of "toolkit":
+summarize_words(mapped_words = toolkit, parameter = "GP")
 
-# ===========================================================================
-# ONC Mode (New in v2.1)
-# ===========================================================================
+# Note that mapped_words can be supplied as a list:
+summarize_words(mapped_words = c(toolkit, penguin), parameter = "GP")
 
-# In ONC mode, summarize_words breaks down the measure by syllabic position.
-# Instead of a single set of statistics across all units, you get separate
-# statistics for onset (O), nucleus (N), and coda (C) units.
-#
-# Output columns:
-#   mean_onset, median_onset, max_onset, min_onset, sd_onset,
-#   mean_nucleus, median_nucleus, max_nucleus, min_nucleus, sd_nucleus,
-#   mean_coda, median_coda, max_coda, min_coda, sd_coda
+# Mean parsing probability of "penguin":
+summarize_words(mapped_words = penguin, parameter = "pp")
 
-# Single word — ONC breakdown for "penguin":
-summarize_words(
-  mapped_words = scored_words_PG[
-    which(wordlist_v2_1_merged$spelling == "penguin")],
-  parameter = "PG",
-  mode = "ONC")
+# ONC: 
 
-# Compare default vs. ONC for the same word:
-summarize_words(
-  mapped_words = scored_words_PG[
-    which(wordlist_v2_1_merged$spelling == "penguin")],
-  parameter = "PG")
+summarize_words(mapped_words = penguin, parameter = "PG", mode = "ONC")
 
-summarize_words(
-  mapped_words = scored_words_PG[
-    which(wordlist_v2_1_merged$spelling == "penguin")],
-  parameter = "PG",
-  mode = "ONC")
-
-# ONC mode across the full corpus:
-all_words_PG_onc <- summarize_words(
-  mapped_words = scored_words_PG,
-  parameter = "PG",
-  mode = "ONC")
-head(all_words_PG_onc)
+# To summarize all words from the corpus for each of the two modes:
+all_words_PG_probability <- summarize_words(mapped_words = scored_words_PG, parameter = "PG")
+all_words_PG_onc <- summarize_words(mapped_words = scored_words_PG, parameter = "PG", mode = "ONC")
