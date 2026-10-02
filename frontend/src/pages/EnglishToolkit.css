@@ -96,6 +96,92 @@
   gap: 1.5rem;
 }
 
+.toolkit-frequency {
+  align-items: stretch;
+  background: #f7f8f9;
+}
+
+.toolkit-frequency .left-sidebar,
+.toolkit-frequency .right-content {
+  height: auto;
+  min-height: calc(100vh - 92px);
+  overflow: visible;
+}
+
+.toolkit-frequency .left-sidebar {
+  background: #c5d2da;
+  color: #1c1c1c;
+}
+
+.toolkit-frequency .right-content {
+  padding: 0;
+  background: #ffffff;
+}
+
+.toolkit-frequency .right-body {
+  padding: 1.35rem 1.75rem 2rem;
+}
+
+.left-sidebar .section-title,
+.left-sidebar .file-upload-title {
+  text-align: left;
+}
+
+.toolkit-frequency .section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.toolkit-frequency .file-upload-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.toolkit-frequency .file-upload-container {
+  background: #f3f5f6;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.toolkit-frequency .browse-button {
+  border-radius: 999px;
+  padding: 0.4rem 1.15rem;
+  font-size: 0.85rem;
+}
+
+.toolkit-frequency .main-title {
+  margin-bottom: 1rem;
+  font-size: 1.35rem;
+}
+
+.toolkit-frequency .variable-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.toolkit-frequency .checkbox-group {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.toolkit-frequency .checkbox-item,
+.toolkit-frequency .radio-item {
+  font-size: 0.95rem;
+}
+
+.toolkit-frequency .checkbox-input,
+.toolkit-frequency .radio-input {
+  accent-color: #1f7ec4;
+  width: 1rem;
+  height: 1rem;
+}
+
+.toolkit-frequency .statistics-header {
+  background: #7aa8c4;
+}
+
 .right-content {
   flex: 1;
   height: 100vh;

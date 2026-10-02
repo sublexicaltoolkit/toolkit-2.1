@@ -294,10 +294,10 @@ export default function EnglishToolkit({
   return (
     <Layout
       variant="app"
-      pageTitle="How to use this toolkit:"
-      pageIntro={toolkitInstructions}
+      pageTitle={mode === "frequency-consistency" ? undefined : "How to use this toolkit:"}
+      pageIntro={mode === "frequency-consistency" ? undefined : toolkitInstructions}
     >
-    <main className="main-container">
+    <main className={`main-container${mode === "frequency-consistency" ? " toolkit-frequency" : ""}`}>
       <aside className="left-sidebar">
         <div className="input-section">
           <h5 className="section-title">Letter Input</h5>
@@ -391,6 +391,7 @@ export default function EnglishToolkit({
       </aside>
 
       <section className="right-content">
+        <div className="right-body">
         <h2 className="main-title">Variables</h2>
 
         {mode === "frequency-consistency" ? (
@@ -601,6 +602,7 @@ export default function EnglishToolkit({
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </section>
     </main>
