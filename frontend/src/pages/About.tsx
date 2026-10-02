@@ -1,8 +1,16 @@
 import Layout from "../components/Layout";
 
 const publications = [
-  { title: "Publication title" },
-  { title: "Publication title" },
+  {
+    title:
+      "Pseudoword spelling: insights into sublexical representations and lexical interactions",
+    authors: "Robert W. Wiley, Kristin M. Key & Jeremy J. Purcell",
+  },
+  {
+    title:
+      "The English Sublexical Toolkit: Methods for indexing sound–spelling consistency",
+    authors: "Robert W. Wiley, Sartaj Singh, Yusuf Baig, Kristin Key & Jeremy J. Purcell",
+  },
 ];
 
 const authors = [
@@ -19,15 +27,24 @@ export default function About() {
     <Layout variant="about">
       <main className="container about">
         <section className="about-intro">
-          <h1 className="about-title">About</h1>
+          <h1 className="about-title">English Sublexical Toolkit</h1>
+          <p className="about-lead">
+            The English Sublexical Toolkit is a suite of tools that models sublexical
+            regularities in English using an experience-based learning framework.
+            It computes frequency and probability indices for grapheme-phoneme
+            mappings across multiple grain sizes, offering novel and more
+            accurate measures to predict reading and spelling behavior for both
+            real and pseudowords.
+          </p>
         </section>
 
-        <section className="about-section">
+        <section className="about-section about-publications">
           <h2 className="about-heading">Publications</h2>
           <div className="pub-grid">
-            {publications.map((pub, index) => (
-              <article key={`${pub.title}-${index}`} className="pub-card">
+            {publications.map((pub) => (
+              <article key={pub.title} className="pub-card">
                 <h3 className="pub-title">{pub.title}</h3>
+                <p className="pub-authors">{pub.authors}</p>
               </article>
             ))}
           </div>

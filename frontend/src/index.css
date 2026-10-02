@@ -27,7 +27,7 @@ body {
 }
 
 .page-about {
-  background: linear-gradient(180deg, #d4eaf6 0%, #f7fbfe 28%, #ffffff 50%, #f7fbfe 72%, #d4eaf6 100%);
+  background: linear-gradient(180deg, #d7eaf6 0%, #e7f3f9 48%, #f7fbfd 72%, #ffffff 86%, #e7f3f9 100%);
 }
 
 .page-app {
@@ -307,15 +307,23 @@ body {
 
 .about-intro {
   text-align: center;
-  max-width: 720px;
-  margin: 48px auto 72px;
+  max-width: 760px;
+  margin: 28px auto 36px;
 }
 
 .about-title {
-  font-size: clamp(40px, 6vw, 56px);
-  margin: 0;
+  font-size: clamp(32px, 4vw, 40px);
+  margin: 0 0 22px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+}
+
+.about-lead {
+  margin: 0;
+  color: #111111;
+  font-size: 18px;
+  line-height: 1.45;
+  text-align: left;
 }
 
 .about-section {
@@ -332,32 +340,43 @@ body {
   text-transform: uppercase;
 }
 
+.about-publications .about-heading {
+  margin: 0 0 16px;
+  text-align: left;
+  font-size: 28px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .pub-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 18px;
 }
 
 .pub-card {
-  min-height: 180px;
-  aspect-ratio: 1;
+  min-height: 150px;
   background: #ffffff;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 .pub-title {
-  margin: 0;
+  margin: 0 0 14px;
   font-weight: 700;
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 18px;
+  line-height: 1.25;
 }
 
 .pub-authors,
 .pub-source {
-  color: #4b5563;
-  font-size: 14px;
+  margin: 0;
+  color: #111111;
+  font-size: 16px;
+  line-height: 1.35;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .person-grid {
