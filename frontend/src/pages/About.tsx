@@ -14,13 +14,27 @@ const publications = [
 ];
 
 const authors = [
-  { name: "Name", initials: "A" },
-  { name: "Name", initials: "B" },
-  { name: "Name", initials: "C" },
-  { name: "Name", initials: "D" },
+  {
+    name: "Robert W. Wiley",
+    affiliation: "University of North Carolina Greensboro",
+  },
+  {
+    name: "Jeremy J. Purcell",
+    affiliation: "University of Maryland College Park",
+  },
+  {
+    name: "Kristin M. Key",
+    affiliation: "University of North Carolina Greensboro",
+  },
 ];
 
-const websiteTeam = ["Name", "Name"];
+const softwareColumns = [
+  ["first name, last name", "first name, last name", "first name, last name"],
+  ["first name, last name", "first name, last name", "first name, last name"],
+  ["first name, last name", "first name, last name", "first name, last name"],
+];
+
+const websiteTeam = ["Abhiram Cheerla", "Tarun Kommuri"];
 
 export default function About() {
   return (
@@ -50,27 +64,47 @@ export default function About() {
           </div>
         </section>
 
-        <section className="about-section">
-          <h2 className="about-heading">Authors &amp; contributors</h2>
-          <div className="person-grid">
-            {authors.map((person, index) => (
-              <article key={`${person.name}-${index}`} className="person-card">
-                <span className="person-avatar" aria-hidden="true">
-                  {person.initials}
-                </span>
-                <h3 className="person-name">{person.name}</h3>
+        <section className="about-section about-people">
+          <h2 className="about-heading">Authors</h2>
+          <div className="author-grid">
+            {authors.map((person) => (
+              <article key={person.name} className="author-card">
+                <span className="author-photo" aria-hidden="true" />
+                <h3 className="author-name">{person.name}</h3>
+                <p className="author-affiliation">{person.affiliation}</p>
               </article>
             ))}
+            <article className="author-card author-slot">
+              <div className="image-placeholder">Image</div>
+              <div className="name-placeholder">Name + Desc.</div>
+            </article>
           </div>
         </section>
 
-        <section className="about-section">
-          <h2 className="about-heading">Website development</h2>
-          <ul className="dev-list">
-            {websiteTeam.map((name, index) => (
-              <li key={`${name}-${index}`}>{name}</li>
-            ))}
-          </ul>
+        <section className="about-section about-contributors">
+          <h2 className="about-heading">Contributors</h2>
+          <div className="contributor-layout">
+            <div>
+              <h3>Software/Documentation</h3>
+              <div className="software-columns">
+                {softwareColumns.map((column, columnIndex) => (
+                  <ul key={columnIndex}>
+                    {column.map((name, nameIndex) => (
+                      <li key={`${columnIndex}-${nameIndex}`}>{name}</li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+            </div>
+            <div className="website-team">
+              <h3>Website Development</h3>
+              <ul>
+                {websiteTeam.map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </section>
       </main>
     </Layout>

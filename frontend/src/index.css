@@ -379,57 +379,116 @@ body {
   text-underline-offset: 2px;
 }
 
-.person-grid {
+.about-people,
+.about-contributors {
+  max-width: 940px;
+}
+
+.about-people .about-heading,
+.about-contributors .about-heading {
+  margin: 0 0 18px;
+  text-align: left;
+  font-size: 32px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.author-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 28px 16px;
-  justify-items: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
-.person-card {
+.author-card {
   text-align: center;
-  max-width: 160px;
 }
 
-.person-avatar {
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 12px;
+.author-photo {
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 16px;
+  display: block;
+  border-radius: 50%;
+  background: #d5d5d5;
+}
+
+.author-name {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.author-affiliation {
+  margin: 0 auto;
+  max-width: 190px;
+  color: #222222;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.author-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-placeholder {
+  width: 132px;
+  height: 124px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: #9fd3f2;
-  color: #1d4f73;
-  font-weight: 700;
-  font-size: 22px;
-}
-
-.person-name {
-  margin: 0 0 4px;
-  font-size: 14px;
+  background: #d5d5d5;
+  color: #111111;
+  font-size: 28px;
   font-weight: 700;
 }
 
-.person-role {
-  margin: 0;
-  color: #6b7280;
-  font-size: 13px;
+.name-placeholder {
+  margin-top: 18px;
+  padding: 8px 16px;
+  background: #d5d5d5;
+  color: #111111;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.dev-list {
-  list-style: none;
-  margin: 0 auto;
-  padding: 0;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
+.contributor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 32px;
+  align-items: start;
+}
+
+.contributor-layout h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.software-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-.dev-list li {
-  text-align: center;
-  font-size: 15px;
+.software-columns ul,
+.website-team ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.software-columns li,
+.website-team li {
+  color: #222222;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+.website-team {
+  padding-top: 2px;
 }
 
 @media (max-width: 720px) {
@@ -465,7 +524,10 @@ body {
   .footer-bottom {
     padding: 17px 24px 18px;
   }
-  .pub-grid {
+  .pub-grid,
+  .author-grid,
+  .contributor-layout,
+  .software-columns {
     grid-template-columns: 1fr;
   }
 }
