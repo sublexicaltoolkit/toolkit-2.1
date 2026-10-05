@@ -1,77 +1,70 @@
-# Generating Pseudoword Spellings with pw_spell
-# Follows Section 6.5 of the Toolkit Guide
+# TODO associated section of toolkit guide 
+# 
+# pw_spell generates possible spellings for a given pronunciation, according to
+# the Toolkit's rules.
 #
-# pw_spell generates possible spellings for a given pronunciation string.
-# Valid levels: "PG", "OC", "OR", or "all".
-# Supplying a value of 1 to min_map yields only the most probable spelling;
-# lower values of min_map set smaller lower bounds on the probability and thus
-# yield additional, though less probable, spellings. A value of 0 shows all
-# valid options.
+# min_map = 1 (the default) returns only the most probable spelling(s). This
+# value can be set between 0 and 1 inclusive to set a lower bound on spelling
+# probability, with 0 accepting all possible spellings.
 
-# setwd("replace/with/path/to/pw-fcns")
+# setwd("<path to scripts/pw-fcns>")
 load("../../Toolkit_v2.1.RData")
 
 # ===========================================================================
-# a) Most Common Usage
+# Common Usage
 # ===========================================================================
 
-# Get the most likely spelling for a pronunciation at the PG level.
-# This is the simplest and most common call: provide a target pronunciation,
-# the level, and the appropriate table.
+# Obtain the  most likely spelling of the /sib/ pseudoword:
 pw_spell(target = "sib", PG_table = all_tables_PG)
 
-# By default, min_map = 1, which returns only the most probable spelling(s).
-# Lower min_map to see more options above a probability threshold:
-pw_spell(target = "sib", PG_table = all_tables_PG, min_map = 0.01)
+# With min_map set to 0.01 we instead now obtain all possible spellings
+# above a 1% probability:
+sib_spellings <- pw_spell(target = "sib", PG_table = all_tables_PG, min_map = 0.01)$scores_pg
+# View the first few in reverse order of mean probability (highest first):
+head(sib_spellings[order(-sib_spellings$mean), ])
 
-# Set score = FALSE to return only the spelling strings without scoring them:
-pw_spell(target = "sib", PG_table = all_tables_PG, min_map = 0.01, score = FALSE)
-
-# ===========================================================================
-# b) Individual Word vs. List of Words
-# ===========================================================================
-
-# --- Individual word ---
-pw_spell(target = "fl5t", PG_table = all_tables_PG)
-
-# --- List of words ---
-# pw_spell accepts a vector of pronunciations and returns results for all:
-pw_spell(
-  target   = c("fl5t", "sib", "gr8t"),
-  PG_table = all_tables_PG)
+# Alternatively, we can just obtain the spellings themselves without computing
+# the associated probabilities by setting score=FALSE
+head(pw_spell(target = "sib", PG_table = all_tables_PG, min_map = 0.01, score = FALSE))
 
 # ===========================================================================
-# c) Real Word vs. Pseudoword
+# Calling pw_spell with Lists
 # ===========================================================================
 
-# --- Real word ---
-# "cat" = /k@t/ in Toolkit notation:
+# pw_spell can be supplied a vector of pronunciations to process multiple words
+# at one; passing in wordlistv2_merged$pronunciation for instance would run the
+# function on the entire lexicon
+pw_spell(target = c("fl5t", "sib", "gr8t"), PG_table = all_tables_PG)
+
+# ===========================================================================
+# Real vs. Pseudowords
+# ===========================================================================
+
+# pw_spell can be called for both pronunciations of real words as well as
+# pseudowords
 pw_spell(target = "k@t", PG_table = all_tables_PG)
 
-# --- Pseudoword ---
-# A novel pronunciation /blEf/ that is not in the corpus:
 pw_spell(target = "blEf", PG_table = all_tables_PG)
 
 # ===========================================================================
-# d) Using All Parameters
+# All pw_spell Parameters
 # ===========================================================================
 
-# First, compute parsed_corpus for PP scoring (if not already available):
-# parsed_corpus <- parse_corpus(wordlist_v2_1_merged, all_words_PG)
-
-# Generate spellings at the OC level, scored by parsing probability (PP),
-# with all parameters explicitly specified:
+# Here, we obtain all spellings for "fl5k", at the OC level, scoring the results
+# and forcing a minimum probability (of the phoneme->grapheme mappings) of 0.05.
+# We set an upper bound on the number of produced spellings to 500, where the
+# the mean GP consistency is set to at least 0.5.
 pw_spell(
   target        = "fl5k",
   level         = "OC",
-  score         = TRUE,
   PG_table      = all_tables_PG,
   OC_table      = all_tables_OC,
   OR_table      = all_tables_OR,
+  score         = TRUE,
   min_map       = 0.05,
   max_options   = 500,
-  param         = "pp",
-  mean_score    = 0.3,
+  param         = "GP",
+  mean_score    = 0.5,
   parsed_corpus = parsed_corpus,
   summary_mode  = "default")
 
@@ -79,15 +72,11 @@ pw_spell(
 # Additional Examples
 # ===========================================================================
 
-# --- Different Grain Sizes ---
-
-# OC level:
+# Spellings differ depending on the grain size used to generate
 pw_spell(target = "sib", level = "OC", OC_table = all_tables_OC)
-
-# OR level:
 pw_spell(target = "sib", level = "OR", OR_table = all_tables_OR)
 
-# All levels at once:
+# Call for all levels at once
 pw_spell(
   target   = "sib",
   level    = "all",
@@ -95,8 +84,18 @@ pw_spell(
   OC_table = all_tables_OC,
   OR_table = all_tables_OR)
 
-# --- ONC summary mode ---
-# Get scored spellings with consistency broken down by onset, nucleus, coda:
+# Parsing probability measures can also be used for scoring
+pw_spell(
+  target        = "fl5k",
+  level         = "OC",
+  PG_table      = all_tables_PG,
+  OC_table      = all_tables_OC,
+  min_map       = 0.05,
+  param         = "pp",
+  parsed_corpus = parsed_corpus)
+
+# In ONC mode, consistency is defined for the onset, nucleus, and coda units
+# separately:
 pw_spell(
   target       = "sib",
   PG_table     = all_tables_PG,
