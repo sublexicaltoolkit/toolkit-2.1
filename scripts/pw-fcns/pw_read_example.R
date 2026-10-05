@@ -1,47 +1,34 @@
-# Generating Pseudoword Pronunciations with pw_read
-# Follows Section 6.5 of the Toolkit Guide
+# TODO associated section of Toolkit guide
 #
-# pw_read generates possible pronunciations for pseudowords (or any spelling)
-# based on the corpus statistics computed by parse_corpus.
-#
-# min_map controls how many phoneme options are included at each grapheme
-# position: a value of 1 returns only the most probable; lower values include
-# less probable phoneme mappings. A value of 0 shows all valid options.
-#
-# min_pp controls how many grapheme parses are considered: a value of 1 uses
-# only the most probable parse; lower values include alternative parses above
-# the threshold. A value of 0 yields all valid parses.
-#
-# Note: pw_read only considers whether grapheme parses are possible in
-# isolation - each grapheme in a parse must exist independently in the corpus,
-# but the resulting pronunciation sequence is not checked for phonotactic
-# validity. See "yacht".
+# pw_read generates possible pronunciations for a spelling (a pseudoword or a real word), using
+# the parsing probabilities in parsed_corpus to choose grapheme parses and the PG table to choose
+# phonemes for each grapheme. Here, "possible" means that each individual
+# phoneme-grapheme mapping exists in the Toolkit corpus, and does not necessarily
+# mean that all generated pronunciations are phonotactically possible.
 
-# setwd("replace/with/path/to/pw-fcns")
+# setwd("<path to scripts/pw-fcns>")
 load("../../Toolkit_v2.1.RData")
 
-# parsed_corpus must be available. If not preloaded, compute it:
-# parsed_corpus <- parse_corpus(wordlist_v2_1_merged, all_words_PG)
-
 # ===========================================================================
-# a) Most Common Usage
+# Common Usage
 # ===========================================================================
 
-# Get the most likely pronunciation for a pseudoword at the PG level.
+# Obtain most likely pronunciation of a pseudoword:
 pw_read(
   target        = "floke",
   parsed_corpus = parsed_corpus,
-  PG_table      = all_tables_PG,
-  min_map = 1)
+  PG_table      = all_tables_PG)
 
-# Lower min_map to see more pronunciation options:
+# Setting min_map to 0.01 means all mappings in generated pronunciations must
+# have a GP consistency of at least 0.01
 pw_read(
   target        = "floke",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG,
   min_map       = 0.01)
 
-# Return only the pronunciation candidates without scoring:
+# Set score to FALSE to obtain only the list of pronunciations, without computing
+# their summary statistics
 pw_read(
   target        = "floke",
   parsed_corpus = parsed_corpus,
@@ -49,86 +36,112 @@ pw_read(
   score         = FALSE)
 
 # ===========================================================================
-# b) Calling pw_read on a list of words
+# Calling pw_read with Lists
 # ===========================================================================
 
-# pw_read accepts a vector of spellings and returns combined results:
+# Lists can be supplied to process multiple grapheme strings together
 pw_read(
   target        = c("sebe", "floke", "brin"),
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG)
 
 # ===========================================================================
-# c) Real Word vs. Pseudoword
+# Real and Pseudowords
 # ===========================================================================
 
-# pw_read can also be called on real words, to see alternative readings:
+# pw_read can be called for both real words and pseudowords:
 pw_read(
   target        = "reach",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG)
 
-# --- Pseudoword ---
 pw_read(
   target        = "blafe",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG)
 
 # ===========================================================================
-# d) Using All Parameters
+# All pw_read Parameters
 # ===========================================================================
 
-# Score at all levels, with all parameters explicitly specified:
+# Here, we obtain pronunciations for the pseudoword spelling "floke" at all
+# levels (PG, OC, and OR), forcing a minimum parsing probability of 0.5 and 
+# a minimum GP consistency of 0.05 for all mappings. We also restrict the final
+# list to only include pronunciations whose mean GP consistency (across all
+# mappings) is at minimum 0.3. Finally, we sort the scored output on parsing
+# probability.
 pw_read(
   target        = "floke",
+  level         = "all",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG,
   OC_table      = all_tables_OC,
   OR_table      = all_tables_OR,
-  level         = "all",
   score         = TRUE,
   min_pp        = 0.5,
   min_map       = 0.05,
   mean_score    = 0.3,
   max_options   = 500,
   param         = "GP",
-  summary_mode  = "default")
+  summary_mode  = "default",
+  pp_param      = "pp")
+
+# ===========================================================================
+# Analyzing Mispronunciatons
+# ===========================================================================
+
+# Here, we obtain every legal (phonotactically possible) reading of the real
+# word "reach", sorted by mean GP consistency, and set a few other filtering
+# parameters. 
+# Note that for larger words, such analyses may not always be possible without
+# raising the min_map floor to reduce the number of candidates.
+reach_readings <- pw_read(
+  target        = "reach",
+  parsed_corpus = parsed_corpus,
+  PG_table      = all_tables_PG,
+  min_pp        = 0,
+  min_map       = 0.01,
+  max_options   = 1e6)$scores_gp
+reach_readings <- reach_readings[order(-reach_readings$mean), ]
+head(reach_readings[, c("pronunciation", "mean", "pp")], 10)
+
+# We can also see if any of the generated possible pronunciations for "reach"
+# under the constraints above happen to be real pronunciations present
+# in the lexicon:
+intersect(reach_readings$pronunciation, wordlist_v2_1_merged$pronunciation)
 
 # ===========================================================================
 # Additional Examples
 # ===========================================================================
 
-# --- Multi-level scoring ---
-# Score at PG, OC, and OR levels simultaneously:
+# Calling pw_read for multiple grain sizes at once:
 pw_read(
-  target        = "floke",
+  target        = "sebe",
+  level         = "all",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG,
   OC_table      = all_tables_OC,
-  OR_table      = all_tables_OR,
-  level         = "all")
+  OR_table      = all_tables_OR)
 
-# --- Including alternative grapheme parses ---
-# Set min_pp < 1 to consider less probable grapheme parsings:
-pw_read(
-  target        = "floke",
-  parsed_corpus = parsed_corpus,
-  PG_table      = all_tables_PG,
-  min_pp        = 0.5)
-
-# Set min_pp = 0 to include all valid grapheme parses:
+# Set min_pp to 0 to compute for all parses
 pw_read(
   target        = "floke",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG,
   min_pp        = 0)
 
-# --- ONC summary mode ---
-# Get scored pronunciations with consistency broken down by onset, nucleus,
-# coda:
+# As with pw_spell, ONC mode separates statistics by onset, nucleus, and coda
 pw_read(
   target        = "floke",
   parsed_corpus = parsed_corpus,
   PG_table      = all_tables_PG,
   min_map       = 0.01,
   summary_mode  = "ONC")
+
+# pp2 (the new parsing probability measure) can also be used as the parsing
+# probability indicator
+pw_read(
+  target        = "bluise",
+  parsed_corpus = parsed_corpus,
+  PG_table      = all_tables_PG,
+  pp_param      = "pp2")
