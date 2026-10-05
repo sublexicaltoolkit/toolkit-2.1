@@ -1,10 +1,18 @@
+# TODO add toolkit guide section number
+#
+# Word neighbors are corpus words within some defined distance (in this case,
+# Levenshtein distance) of a target word. For each grain size, this distance
+# entails the number of insertions, deletions, and substitutions of units at
+# that size. As such, it is possible for words to have a different number of
+# neighbors, depending on the grain size with respect to which we obtain the
+# neighbors.
+
+# setwd("<path to scripts/neighbors>")
+load("../../Toolkit_v2.1.RData")
 library(stringdist)
+library(dplyr)
 
-# Must have the 2.1 toolkit environment loaded
-# load("path/to/Toolkit_v2.1.RData")
-
-# Function from Bob to compute edit-distance matrices between
-# two words
+# Edit distance between two sequences of units (e.g. the grapheme rows of two mapped words)
 edit_distance_matrices <- function(mat1, mat2) {
   # Convert matrices to character vectors
   vec1 <- as.character(as.vector(mat1))
@@ -43,7 +51,7 @@ get_orthographic_neighbors <- function(item_spellings, item_pronunciations, type
 
     if (type == "letter"){
         for(j in 1:nitems){
-        mydists <- stringdist(item_spellings[j],wordlist_v2_1_merged$spelling) #find letter distance between the target and every real word in the v2.0 list
+        mydists <- stringdist(item_spellings[j],wordlist_v2_1_merged$spelling) #letter distance between the target and every corpus word
         neighbors[[j]] <- wordlist_v2_1_merged[which(mydists<=maxdist),] #select just the real words that are within the maximum allowed distance
         }
     } else {
@@ -64,7 +72,7 @@ get_orthographic_neighbors <- function(item_spellings, item_pronunciations, type
             
             tryCatch({mygraphemes1 <- level_func(spelling=item_spellings[j], pronunciation=item_pronunciations[j])[[1]][[1]][2,]},error=function(e)NA)
 
-            for(i in 1:length(level_table[[1]])){ #for each word in the version 2.0 list
+            for(i in 1:length(level_table[[1]])){ #for each corpus word
                 lexicongraphemes <- level_table[[1]][[i]][2,] #extract graphemes
                 mydists[i] <- edit_distance_matrices(mygraphemes1,lexicongraphemes) #compute the distance between the target's graphemes and this word's graphemes
             }
@@ -95,7 +103,7 @@ get_phonological_neighbors <- function(item_spellings, item_pronunciations, type
 
         tryCatch({myphonemes1 <- level_func(spelling=item_spellings[j], pronunciation=item_pronunciations[j])[[1]][[1]][1,]},error=function(e)NA)
 
-        for(i in 1:length(level_table[[1]])){ #for each word in the version 2.0 list
+        for(i in 1:length(level_table[[1]])){ #for each corpus word
             lexiconphonemes <- level_table[[1]][[i]][1,] # extract phonemes
             mydists[i] <- edit_distance_matrices(myphonemes1,lexiconphonemes) #compute the distance between the target's phonemes and phonemes of this word
         }
@@ -139,24 +147,28 @@ create_word_neighbor_df <- function(words, ndf) {
     return(df)
 }
 
-# Examples (from Bob, modified to work with these functions
-# Uncomment any of the following
+### EXAMPLES ###
 
 items <- c("blease","floke")
 prons <- c("blis","flok")
 
-# # By default, graphemic neighbors are at the letter level.
+# By default, graphemic neighbors are at the letter level:
+letter_neighbors <- get_orthographic_neighbors(items, prons)
+letter_neighbors[[2]]
 
-# letter_neighbors <- get_orthographic_neighbors(items, prons)
+# As one data frame of target / neighbor pairs:
+create_word_neighbor_df(data.frame(spelling = items), letter_neighbors)
 
-# # But we can also get the neighbors for any other unit
+# The unit-level searches below compare each target with every corpus word
+
+# Orthographic neighbors at any unit level:
 
 # pg_neighbors <- get_orthographic_neighbors(items, prons, "PG", 1)
 # oc_neighbors <- get_orthographic_neighbors(items, prons, "OC", 1)
 # or_neighbors <- get_orthographic_neighbors(items, prons, "OR", 1)
 # onc_neighbors <- get_orthographic_neighbors(items, prons, "ONC", 1)
 
-# # And we can also obtain the phonemic neighbors at any level
+# Phonological neighbors at any unit level:
 
 # pg_phoneme_neighbors <- get_phonological_neighbors(items, prons, "PG", 1)
 # oc_phoneme_neighbors <- get_phonological_neighbors(items, prons, "OC", 1)
