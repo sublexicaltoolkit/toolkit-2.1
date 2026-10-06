@@ -48,5 +48,7 @@ parsed_corpus[[3]][parsed_corpus[[3]]$spelling == "yacht", ]
 # pp_freq_min to a dataset consisting of rows for each word by spelling and can
 # be used to include the parsed_corpus data like so (all_measures must exist
 # in the environment first, and is the full dataset containing all Toolkit measures
-# for all corpus words)
+# for all corpus words; alternatively this function can simply append these columns
+# to any dataset with a "spelling" column)
+# source("../lib/pipeline_functions.R")
 # all_measures <- add_pp_measures(all_measures, parsed_corpus[[4]])
