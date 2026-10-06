@@ -9,6 +9,7 @@
 
 # setwd("<path to scripts/parsing-probabilities>")
 load("../../Toolkit_v2.1.RData")
+library(stringr)
 
 # parse_corpus requires a data frame like the Toolkit wordlist, with spelling,
 # pronunciation, and freq columns, as well as the output from calling map_PG on

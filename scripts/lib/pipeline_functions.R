@@ -152,43 +152,6 @@ corpus_rows <- function(spellings = NULL, corpus = wordlist_v2_1_merged) {
     return(which(corpus$spelling %in% spellings))
 }
 
-# Scores the corresponding rows of the supplied corpus (i.e. producing datasets
-# of the scored_words family) for all combinations of the provided grain_sizes
-# and weight_options. 
-# Results are saved to the global environment as <output_name><grain suffix><weight suffix>. 
-# If the scored_words dataset(s) already exist and the provided rows are desired,
-# they can be obtained by passing the root name of that scored_words dataset
-# to scored_root (the name of the dataset will be built from the grain_sizes x 
-# weight_options combinations).
-# If scoring needs to be completed for the provided row(s), outputs from a
-# make_tables function will be looked for with the provided tables_root root 
-# name.
-score_corpus_rows <- function(rows, grain_sizes, weight_options, output_name, corpus = wordlist_v2_1_merged,
-                              tables_root = "all_tables", scored_root = "scored_words") {
-    dataset_names <- c()
-
-    for (grain in names(grain_sizes)) {
-        for (weight in names(weight_options)) {
-            suffix <- paste0(grain_sizes[[grain]], weight_options[[weight]])
-            shipped_name <- paste0(scored_root, suffix)
-            var_name <- paste0(output_name, suffix)
-
-            if (exists(shipped_name, envir = .GlobalEnv)) {
-                data <- get(shipped_name)[rows]
-            } else {
-                message("Scoring ", length(rows), " words against ", tables_root, suffix)
-                data <- map_value(corpus$spelling[rows], corpus$pronunciation[rows], grain, get(paste0(tables_root, suffix)))
-            }
-            assign(var_name, data, envir = .GlobalEnv)
-
-            dataset_names <- c(dataset_names, var_name)
-        }
-    }
-
-    return(dataset_names)
-}
-
-
 ### MEASURE EXTRACTION ###
 
 # Wrapper for summarize_words with the root scored_words dataset table name,

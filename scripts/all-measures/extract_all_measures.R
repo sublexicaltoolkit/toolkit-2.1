@@ -36,8 +36,8 @@ build_missing_tables(grain_sizes, weight_options)
 # This is the last step of the batch pipeline (see scripts/batch-mapping/). The first
 # two steps aren't needed, since the corpus words are already mapped (all_words_*),
 # and some of the tables come preprocessed while the others were built above.
-# The Toolkit also provides default-weight scores (scored_words_PG, _ONC, _OC, _OR),
-# so we only need to recompute for the weight options that were not preprocessed.
+# The Toolkit only provides default-weight scores (scored_words_PG, _ONC, _OC, _OR),
+# so we need to recompute for the weight options that were not preprocessed.
 target <- wordlist_v2_1_merged[corpus_rows(target_words), ]
 batch_map_values(target$spelling, target$pronunciation, "all_tables", grain_sizes, weight_options, "target_scored")
 
