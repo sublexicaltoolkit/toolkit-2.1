@@ -40,6 +40,19 @@ type EnglishToolkitProps = {
   mode?: "frequency-consistency" | "phonology-orthography";
 };
 
+const unitTypeOptions: { value: UnitType; label: string }[] = [
+  { value: "PG", label: "Phoneme-Grapheme (PG)" },
+  { value: "OR", label: "Onset-Rime (OR)" },
+  { value: "OC", label: "Onset-Coda (OC)" },
+  { value: "ONC", label: "Onset-Nucleus-Coda (ONC)" },
+  { value: "Syllable", label: "Syllable" },
+];
+
+const directionOptions: { value: Exclude<Directionality, null>; label: string; detail: string }[] = [
+  { value: "Reading", label: "Reading", detail: "(Grapheme → Phoneme)" },
+  { value: "Spelling", label: "Spelling", detail: "(Phoneme → Grapheme)" },
+];
+
 const toolkitInstructions =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
 
@@ -294,8 +307,8 @@ export default function EnglishToolkit({
   return (
     <Layout
       variant="app"
-      pageTitle={mode === "frequency-consistency" ? undefined : "How to use this toolkit:"}
-      pageIntro={mode === "frequency-consistency" ? undefined : toolkitInstructions}
+      pageTitle="How to use this toolkit:"
+      pageIntro={toolkitInstructions}
     >
     <main className={`main-container${mode === "frequency-consistency" ? " toolkit-frequency" : ""}`}>
       <aside className="left-sidebar">
@@ -399,67 +412,91 @@ export default function EnglishToolkit({
             <div className="variable-section">
               <h3 className="variable-title">Unit Type</h3>
               <div className="checkbox-group">
-                {(["PG", "OR", "OC", "ONC", "Syllable"] as UnitType[]).map((option) => (
-                  <label key={option} className="checkbox-item">
+                {unitTypeOptions.map((option) => (
+                  <label key={option.value} className="checkbox-item">
                     <input
                       type="checkbox"
-                      checked={unitTypes.includes(option)}
+                      checked={unitTypes.includes(option.value)}
                       onChange={(e) =>
                         setUnitTypes(
                           e.target.checked
-                            ? [...unitTypes, option]
-                            : unitTypes.filter((item) => item !== option),
+                            ? [...unitTypes, option.value]
+                            : unitTypes.filter((item) => item !== option.value),
                         )
                       }
                       className="checkbox-input"
                     />
-                    <span>{option}</span>
+                    <span>{option.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="variable-section">
-              <h3 className="variable-title">Measure Type</h3>
-              <div className="checkbox-group">
-                {(["Frequency", "Consistency"] as MeasureType[]).map((option) => (
-                  <label key={option} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={measureTypes.includes(option)}
-                      onChange={(e) =>
-                        setMeasureTypes(
-                          e.target.checked
-                            ? [...measureTypes, option]
-                            : measureTypes.filter((item) => item !== option),
-                        )
-                      }
-                      className="checkbox-input"
-                    />
-                    <span>{option}</span>
-                  </label>
-                ))}
+            <div className="variable-row">
+              <div className="variable-section">
+                <h3 className="variable-title">Measure Type</h3>
+                <div className="checkbox-group">
+                  {(["Frequency", "Consistency"] as MeasureType[]).map((option) => (
+                    <label key={option} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={measureTypes.includes(option)}
+                        onChange={(e) =>
+                          setMeasureTypes(
+                            e.target.checked
+                              ? [...measureTypes, option]
+                              : measureTypes.filter((item) => item !== option),
+                          )
+                        }
+                        className="checkbox-input"
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="variable-section">
+                <h3 className="variable-title">Multiple Pronunciations?</h3>
+                <div className="radio-group">
+                  {["Yes", "No"].map((option) => (
+                    <label key={option} className="radio-item">
+                      <input
+                        type="radio"
+                        name="multiplePronunciations"
+                        value={option}
+                        checked={multiplePronunciations === option}
+                        onChange={(e) =>
+                          setMultiplePronunciations(e.target.value as "Yes" | "No")
+                        }
+                        className="radio-input"
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="variable-section">
               <h3 className="variable-title">Directionality</h3>
               <div className="checkbox-group">
-                {(["Reading", "Spelling"] as Exclude<Directionality, null>[]).map((option) => (
-                  <label key={option} className="checkbox-item">
+                {directionOptions.map((option) => (
+                  <label key={option.value} className="checkbox-item">
                     <input
                       type="checkbox"
-                      checked={directionalities.includes(option)}
+                      checked={directionalities.includes(option.value)}
                       onChange={(e) =>
                         setDirectionalities(
                           e.target.checked
-                            ? [...directionalities, option]
-                            : directionalities.filter((item) => item !== option),
+                            ? [...directionalities, option.value]
+                            : directionalities.filter((item) => item !== option.value),
                         )
                       }
                       className="checkbox-input"
                     />
-                    <span>{option}</span>
+                    <span>{option.label}</span>
+                    <span className="option-detail">{option.detail}</span>
                   </label>
                 ))}
               </div>
@@ -481,27 +518,6 @@ export default function EnglishToolkit({
                         )
                       }
                       className="checkbox-input"
-                    />
-                    <span>{option}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="variable-section">
-              <h3 className="variable-title">Multiple Pronunciations?</h3>
-              <div className="radio-group">
-                {["Yes", "No"].map((option) => (
-                  <label key={option} className="radio-item">
-                    <input
-                      type="radio"
-                      name="multiplePronunciations"
-                      value={option}
-                      checked={multiplePronunciations === option}
-                      onChange={(e) =>
-                        setMultiplePronunciations(e.target.value as "Yes" | "No")
-                      }
-                      className="radio-input"
                     />
                     <span>{option}</span>
                   </label>
