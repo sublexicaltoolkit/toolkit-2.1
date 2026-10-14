@@ -5,6 +5,7 @@ type LayoutProps = {
   variant?: "home" | "about" | "app" | "select";
   pageTitle?: string;
   pageIntro?: string;
+  pageClassName?: string;
 };
 
 export default function Layout({
@@ -12,9 +13,10 @@ export default function Layout({
   variant = "home",
   pageTitle,
   pageIntro,
+  pageClassName,
 }: LayoutProps) {
   return (
-    <div className={`page page-${variant}`}>
+    <div className={`page page-${variant}${pageClassName ? ` ${pageClassName}` : ""}`}>
       <nav className="nav" aria-label="Primary">
         <div className="nav-inner">
           <NavLink to="/" end className={({ isActive }) => `nav-tab${isActive ? " active" : ""}`}>

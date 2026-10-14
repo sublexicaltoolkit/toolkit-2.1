@@ -70,7 +70,7 @@ const phonologyOptionGroups = [
     title: "Orthographic",
     options: [
       "Orthographic Length",
-      "Graphotactic Probability",
+      "Graphotactic Probabilities",
       "Orthographic Neighborhood",
     ],
   },
@@ -78,7 +78,7 @@ const phonologyOptionGroups = [
     title: "Phonological",
     options: [
       "Phonological Length",
-      "Phonotactic Probability",
+      "Phonotactic Probabilities",
       "Phonological Neighborhood",
       "First Phoneme",
       "IPA Transcription",
@@ -87,7 +87,7 @@ const phonologyOptionGroups = [
   {
     title: "Semantic",
     options: [
-      "Concreteness",
+      "Concreteness/Imageability",
       "Polysemy",
       "Number of Features",
       "Specific Semantic Features",
@@ -97,11 +97,7 @@ const phonologyOptionGroups = [
     ],
   },
   {
-    title: "Orthography → Phonology",
-    options: ["Phonographic Neighborhood", "Consistency"],
-  },
-  {
-    title: "Phonology → Orthography",
+    title: "Ortho-Phon",
     options: ["Phonographic Neighborhood", "Consistency"],
   },
   {
@@ -118,7 +114,7 @@ const phonologyOptionGroups = [
   {
     title: "Response Variables",
     options: [
-      "Visual Lexical Decision",
+      "Visual Lexicon Decision",
       "Auditory Lexical Decision",
       "Reading Aloud",
       "Semantic Decision",
@@ -307,13 +303,16 @@ export default function EnglishToolkit({
   return (
     <Layout
       variant="app"
+      pageClassName={mode === "phonology-orthography" ? "page-phonology" : undefined}
       pageTitle="How to use this toolkit:"
       pageIntro={toolkitInstructions}
     >
-    <main className={`main-container${mode === "frequency-consistency" ? " toolkit-frequency" : ""}`}>
+    <main className={`main-container${mode === "frequency-consistency" ? " toolkit-frequency" : " toolkit-phonology"}`}>
       <aside className="left-sidebar">
         <div className="input-section">
-          <h5 className="section-title">Letter Input</h5>
+          <h5 className="section-title">
+            {mode === "phonology-orthography" ? "Input" : "Letter Input"}
+          </h5>
           <textarea
             className="textarea-input"
             placeholder="Enter input here..."
@@ -322,16 +321,18 @@ export default function EnglishToolkit({
             onChange={(event) => setLetterInput(event.target.value)}
           />
         </div>
-        <div className="input-section">
-          <h5 className="section-title">Phoneme Input (optional)</h5>
-          <textarea
-            className="textarea-input"
-            placeholder="Enter input here..."
-            rows={4}
-            value={phonemeInput}
-            onChange={(event) => setPhonemeInput(event.target.value)}
-          />
-        </div>
+        {mode === "frequency-consistency" && (
+          <div className="input-section">
+            <h5 className="section-title">Phoneme Input (optional)</h5>
+            <textarea
+              className="textarea-input"
+              placeholder="Enter input here..."
+              rows={4}
+              value={phonemeInput}
+              onChange={(event) => setPhonemeInput(event.target.value)}
+            />
+          </div>
+        )}
         <div className="input-section">
           <h5 className="file-upload-title">
             Upload a csv/txt file containing a list of words in the first column only:
@@ -356,7 +357,9 @@ export default function EnglishToolkit({
         {mode === "phonology-orthography" && (
           <div className="sidebar-options">
             <div className="input-section">
-              <h5 className="section-title">Multiple Pronunciations?</h5>
+              <h5 className="section-title">
+                <span className="required-mark">*</span>Multiple Pronunciations?
+              </h5>
               <div className="sidebar-radio-row">
                 {["Yes", "No"].map((option) => (
                   <label key={option} className="radio-item">
@@ -377,7 +380,9 @@ export default function EnglishToolkit({
             </div>
 
             <div className="input-section">
-              <h5 className="section-title">Sort by Onset and Rime?</h5>
+              <h5 className="section-title">
+                <span className="required-mark">*</span>Sort By Onset and Rime?
+              </h5>
               <div className="sidebar-radio-row">
                 {[
                   ["onset-rime", "Yes"],
@@ -526,11 +531,11 @@ export default function EnglishToolkit({
             </div>
           </>
         ) : (
-          <div className="measure-option-groups">
+          <div className="phonology-variables">
             {phonologyOptionGroups.map((group) => (
-              <fieldset className="measure-option-group" key={group.title}>
-                <legend>{group.title}</legend>
-                <div className="measure-option-list">
+              <section className="variable-section" key={group.title}>
+                <h3 className="variable-title">{group.title}</h3>
+                <div className="checkbox-group">
                   {group.options.map((option) => {
                     const optionId = `${group.title}::${option}`;
 
@@ -553,18 +558,18 @@ export default function EnglishToolkit({
                     );
                   })}
                 </div>
-              </fieldset>
+              </section>
             ))}
           </div>
         )}
 
-        {/* Action Buttons */}
+        {mode === "frequency-consistency" ? (
+          <>
         <div className="action-buttons">
           <button className="action-button" onClick={handleApply}>Apply</button>
           <button className="action-button" onClick={handleViewResults}>View Results</button>
         </div>
 
-        {/* Summary Statistics */}
         <div className="statistics-container">
           <div className="statistics-header">
             <h3 className="statistics-title">Select Summary Statistics</h3>
@@ -619,6 +624,14 @@ export default function EnglishToolkit({
             </table>
           </div>
         </div>
+          </>
+        ) : (
+          <div className="action-buttons submit-row">
+            <button className="action-button" type="button" onClick={handleViewResults}>
+              Submit
+            </button>
+          </div>
+        )}
         </div>
       </section>
     </main>

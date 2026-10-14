@@ -11,6 +11,7 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  padding-top: 76px;
 }
 
 .page-home {
@@ -34,6 +35,10 @@ body {
   background: #f4f4f4;
 }
 
+.page-phonology {
+  background: linear-gradient(90deg, #c5d2da 0 384px, #ffffff 384px);
+}
+
 .page-select {
   background:
     radial-gradient(
@@ -51,13 +56,15 @@ body {
 }
 
 .nav {
-  position: sticky;
+  position: fixed;
   top: 0;
-  padding: 24px 20px 8px;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
   display: flex;
   justify-content: center;
-  background: transparent;
-  z-index: 10;
+  background: #f4f4f4;
+  z-index: 20;
 }
 
 .nav-inner {
@@ -493,7 +500,7 @@ body {
 
 @media (max-width: 720px) {
   .nav {
-    padding: 16px 12px 6px;
+    padding: 12px;
   }
   .nav-inner {
     max-width: 100%;

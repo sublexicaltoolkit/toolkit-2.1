@@ -160,6 +160,97 @@
   font-weight: 700;
 }
 
+.toolkit-phonology {
+  flex: 1;
+  align-items: stretch;
+  background: #ffffff;
+}
+
+.toolkit-phonology .left-sidebar,
+.toolkit-phonology .right-content {
+  height: auto;
+  overflow: visible;
+}
+
+.toolkit-phonology .left-sidebar {
+  align-self: stretch;
+  background: #c5d2da;
+  color: #1c1c1c;
+}
+
+.toolkit-phonology .right-content {
+  padding: 0;
+  background: #ffffff;
+}
+
+.toolkit-phonology .right-body {
+  padding: 1.15rem 1.5rem 1.5rem;
+}
+
+.toolkit-phonology .section-title,
+.toolkit-phonology .file-upload-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.toolkit-phonology .file-upload-container {
+  background: #f3f5f6;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.toolkit-phonology .browse-button {
+  border-radius: 999px;
+  padding: 0.4rem 1.15rem;
+  font-size: 0.85rem;
+}
+
+.toolkit-phonology .sidebar-radio-row {
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.toolkit-phonology .main-title {
+  margin-bottom: 0.85rem;
+  font-size: 1.25rem;
+}
+
+.toolkit-phonology .variable-section {
+  margin-bottom: 0.85rem;
+}
+
+.toolkit-phonology .variable-title {
+  margin-bottom: 0.4rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.toolkit-phonology .checkbox-group {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.toolkit-phonology .checkbox-input,
+.toolkit-phonology .radio-input {
+  accent-color: #1f7ec4;
+}
+
+.required-mark {
+  margin-right: 0.15rem;
+  color: #e10600;
+}
+
+.toolkit-phonology .submit-row {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.toolkit-phonology .submit-row .action-button {
+  min-width: 110px;
+  border-radius: 8px;
+}
+
 .toolkit-frequency .variable-row {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr);
@@ -612,6 +703,10 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .page-phonology {
+    background: #ffffff;
+  }
+
   .search-option-grid {
     grid-template-columns: 1fr;
   }
