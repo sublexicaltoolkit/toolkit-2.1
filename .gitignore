@@ -1,0 +1,15 @@
+# R session files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Outputs written by the example scripts
+all_measures*.csv.gz
+scripts/full-pipeline/full_pipeline_measures.csv
+scripts/pseudowords/pseudoword_measures.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
