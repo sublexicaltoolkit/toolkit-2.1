@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Layout from "../components/Layout";
 import { columnLabel } from "../data/measureColumns";
+import {
+  PHONOLOGY_COLUMNS,
+  onsetRime,
+  type ResultColumn,
+} from "../data/phonologyMeasures";
 import { lookupWords, type LookupResult, type WordEntry } from "../data/wordData";
 import "./EnglishToolkit.css";
 
@@ -20,9 +25,9 @@ type ToolkitResultsProps = {
 
 type TableRow = {
   word: string;
-  phoneme: string;
-  onset?: string;
-  rime?: string;
+  pronunciation: string;
+  onset: string;
+  rime: string;
   values: string[];
 };
 
@@ -44,7 +49,7 @@ const resultConfig: Record<
       "General — Frequency",
       "Orthographic — Orthographic Length",
       "Phonological — Phonological Length",
-      "Semantic — Concreteness",
+      "Ortho-Phon — Consistency",
     ],
   },
   "onset-rime": {
@@ -52,9 +57,9 @@ const resultConfig: Record<
     title: "Onset and Rime Results",
     searchPath: "/english/phonology-orthography/search",
     fallbackMeasures: [
-      "Orthographic — Orthographic Neighborhood",
-      "Phonological — Phonological Neighborhood",
-      "Orthography → Phonology — Consistency",
+      "Phonological — First Phoneme",
+      "Phonological — Phonological Length",
+      "Ortho-Phon — Consistency",
     ],
   },
 };
@@ -63,8 +68,9 @@ function escapeCsv(value: string) {
   return `"${value.replaceAll('"', '""')}"`;
 }
 
-function formatValue(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "—";
+function formatValue(value: number | string | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "string") return value;
   return Number.isInteger(value) ? String(value) : value.toFixed(4);
 }
 
@@ -76,6 +82,28 @@ function firstPronunciations(entries: WordEntry[]): WordEntry[] {
     seen.add(entry.spelling);
     return true;
   });
+}
+
+// Frequency & consistency measures are all_measures.csv column names;
+// phonology options are "Group — Option" labels mapped in PHONOLOGY_COLUMNS.
+function resolveColumns(
+  variant: ResultVariant,
+  measures: string[],
+): { columns: ResultColumn[]; unavailable: string[] } {
+  if (variant === "frequency-consistency") {
+    return {
+      columns: measures.map((column) => ({
+        header: columnLabel(column),
+        value: (entry) => entry.measures[column] ?? null,
+      })),
+      unavailable: [],
+    };
+  }
+
+  return {
+    columns: measures.flatMap((measure) => PHONOLOGY_COLUMNS[measure] ?? []),
+    unavailable: measures.filter((measure) => !PHONOLOGY_COLUMNS[measure]),
+  };
 }
 
 export default function ToolkitResults({ variant }: ToolkitResultsProps) {
@@ -93,23 +121,16 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
       : isDemo
         ? ["cat", "light", "school"]
         : [];
-  const phonemes =
-    state.phonemes && state.phonemes.length > 0
-      ? state.phonemes
-      : isDemo
-        ? ["/kæt/", "/laɪt/", "/skuːl/"]
-        : [];
   const hasOnsetRimeColumns = variant === "onset-rime";
   const inputColumnCount = hasOnsetRimeColumns ? 4 : 2;
+  const { columns, unavailable } = resolveColumns(variant, measures);
 
-  // Only the frequency & consistency measures are backed by real data so far.
-  const usesLiveData = variant === "frequency-consistency" && words.length > 0;
   const wordsKey = words.join("\n");
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!usesLiveData) return;
+    if (!wordsKey) return;
     let cancelled = false;
     setLookup(null);
     setLoadError(null);
@@ -123,51 +144,37 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
     return () => {
       cancelled = true;
     };
-  }, [usesLiveData, wordsKey]);
+  }, [wordsKey]);
 
-  const isLoading = usesLiveData && !lookup && !loadError;
-  const measureHeaders = usesLiveData ? measures.map(columnLabel) : measures;
+  const isLoading = words.length > 0 && !lookup && !loadError;
 
-  let tableRows: TableRow[];
-  if (usesLiveData) {
-    const entries = lookup
-      ? state.multiplePronunciations === "Yes"
-        ? lookup.entries
-        : firstPronunciations(lookup.entries)
-      : [];
-    tableRows = entries.map((entry) => ({
-      word: entry.spelling,
-      phoneme: entry.pronunciation,
-      values: measures.map((column) => formatValue(entry.measures[column])),
-    }));
-  } else {
-    const rowCount = Math.max(words.length, phonemes.length);
-    tableRows = Array.from({ length: rowCount }, (_, index) => ({
-      word: words[index] || "—",
-      phoneme: phonemes[index] || "—",
-      onset: isDemo ? ["k", "l", "sk"][index] : "—",
-      rime: isDemo ? ["æt", "aɪt", "uːl"][index] : "—",
-      values: measures.map((_, measureIndex) =>
-        isDemo ? (0.42 + index * 0.11 + measureIndex * 0.07).toFixed(2) : "—",
-      ),
-    }));
-  }
+  const entries = lookup
+    ? state.multiplePronunciations === "Yes"
+      ? lookup.entries
+      : firstPronunciations(lookup.entries)
+    : [];
+  const tableRows: TableRow[] = entries.map((entry) => ({
+    word: entry.spelling,
+    pronunciation: entry.pronunciation,
+    ...onsetRime(entry.pronunciation),
+    values: columns.map((column) => formatValue(column.value(entry))),
+  }));
 
   const notFound = lookup?.notFound ?? [];
-  const nothingFound = usesLiveData && lookup !== null && tableRows.length === 0;
+  const nothingFound = lookup !== null && tableRows.length === 0;
   const rowCount = tableRows.length;
 
   const downloadCsv = () => {
     const headers = [
       "Word",
-      usesLiveData ? "Pronunciation" : "IPA Transcription",
+      "Pronunciation",
       ...(hasOnsetRimeColumns ? ["Onset", "Rime"] : []),
-      ...(usesLiveData ? measures : measureHeaders),
+      ...columns.map((column) => column.header),
     ];
     const rows = tableRows.map((row) => [
       row.word,
-      row.phoneme,
-      ...(hasOnsetRimeColumns ? [row.onset ?? "", row.rime ?? ""] : []),
+      row.pronunciation,
+      ...(hasOnsetRimeColumns ? [row.onset, row.rime] : []),
       ...row.values.map((value) => (value === "—" ? "" : value)),
     ]);
     const csv = [headers, ...rows]
@@ -224,42 +231,49 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
           {notFound.length > 0 && !nothingFound && (
             <p className="results-not-found">Not found: {notFound.join(", ")}</p>
           )}
+          {unavailable.length > 0 && (
+            <p className="results-not-found">
+              Not available yet: {unavailable.join(", ")}
+            </p>
+          )}
 
           <div className="results-table-scroll">
             <table className="results-table">
               <thead>
                 <tr className="results-group-header">
                   <th colSpan={inputColumnCount}>Input</th>
-                  <th colSpan={measures.length}>Selected Variables</th>
+                  {columns.length > 0 && (
+                    <th colSpan={columns.length}>Selected Variables</th>
+                  )}
                 </tr>
                 <tr>
                   <th>Word</th>
-                  <th>{usesLiveData ? "Pronunciation" : "IPA Transcription"}</th>
+                  <th>Pronunciation</th>
                   {hasOnsetRimeColumns && (
                     <>
                       <th>Onset</th>
                       <th>Rime</th>
                     </>
                   )}
-                  {measureHeaders.map((measure, index) => (
-                    <th key={measures[index]}>{measure}</th>
+                  {columns.map((column) => (
+                    <th key={column.header}>{column.header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rowCount > 0 ? (
                   tableRows.map((row, index) => (
-                    <tr key={`${row.word}-${row.phoneme}-${index}`}>
+                    <tr key={`${row.word}-${row.pronunciation}-${index}`}>
                       <td>{row.word}</td>
-                      <td>{row.phoneme}</td>
+                      <td>{row.pronunciation}</td>
                       {hasOnsetRimeColumns && (
                         <>
-                          <td>{row.onset}</td>
-                          <td>{row.rime}</td>
+                          <td>{row.onset || "—"}</td>
+                          <td>{row.rime || "—"}</td>
                         </>
                       )}
-                      {row.values.map((value, measureIndex) => (
-                        <td key={measures[measureIndex]}>{value}</td>
+                      {row.values.map((value, columnIndex) => (
+                        <td key={columns[columnIndex].header}>{value}</td>
                       ))}
                     </tr>
                   ))
@@ -267,7 +281,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                   <tr>
                     <td
                       className="results-empty"
-                      colSpan={inputColumnCount + measures.length}
+                      colSpan={inputColumnCount + columns.length}
                     >
                       {emptyMessage}
                     </td>
