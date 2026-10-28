@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-word-data.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-word-data.mjs",
     "build": "tsc -b && vite build",
+    "build:data": "node scripts/build-word-data.mjs --force",
     "lint": "eslint .",
     "preview": "vite preview"
   },

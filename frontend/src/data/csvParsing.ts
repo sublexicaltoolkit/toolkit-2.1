@@ -29,23 +29,23 @@ const baseConfig = {
 } satisfies Papa.ParseConfig<CsvRow>;
 
 /**
- * Stream a CSV with PapaParse and keep only the rows whose `spelling`
- * is in `words`. Streaming row-by-row (`step`) avoids holding the whole
- * 80MB+ measures file in memory at once.
+ * Stream a CSV with PapaParse row-by-row (`step`), keeping the rows
+ * that pass `keep` (all rows by default).
  *
  * `input` is a URL when `download` is true, otherwise CSV text or a File.
  */
-export function parseRowsForWords(
+export function parseCsvRows(
   input: string | File,
-  words: Set<string>,
-  { download = false }: { download?: boolean } = {},
+  {
+    download = false,
+    keep = () => true,
+  }: { download?: boolean; keep?: (row: CsvRow) => boolean } = {},
 ): Promise<CsvRow[]> {
   return new Promise((resolve, reject) => {
     const rows: CsvRow[] = [];
     const callbacks = {
       step: ({ data }: Papa.ParseStepResult<CsvRow>) => {
-        const spelling = String(data.spelling ?? "").toLowerCase();
-        if (words.has(spelling)) rows.push(data);
+        if (keep(data)) rows.push(data);
       },
       complete: () => resolve(rows),
       error: (err: Error) => reject(err),
