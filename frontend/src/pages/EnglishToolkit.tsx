@@ -1,39 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./EnglishToolkit.css";
-import measureCatalog from "../measure_catalog_data/measureCatalog.json";
 import Layout from "../components/Layout";
+import {
+  MEASURE_GROUPS,
+  STATS,
+  columnName,
+  type Directionality,
+  type MeasureType,
+  type Stat,
+  type UnitType,
+  type Weighting,
+} from "../data/measureColumns";
 
 // ---------- Types ----------
-type UnitType = "PG" | "OR" | "OC" | "ONC" | "Syllable";
-type MeasureType = "Frequency" | "Consistency";
-type Directionality = "Reading" | "Spelling" | null;
-type Weighting = "Token" | "Type";
+type TableRowStats = Record<Stat, boolean>;
 
-type CatalogMeasure = {
-  id: string;
-  unitType: UnitType;
-  measureType: MeasureType;
-  directionality: Directionality;
-  weighting: Weighting;
-  position?: "default" | "noposition" | "freq" | null;
-  target?: string | null;
-  stat: "mean" | "median" | "max" | "min" | "sd";
-  label: string;
-  description?: string;
-};
-
-type TableRowStats = {
-  mean: boolean;
-  min: boolean;
-  max: boolean;
-  median: boolean;
-  standardDeviation: boolean;
-};
-
+// Keyed by measure column base (e.g. "PG_default_PG")
 type TableRowsState = Record<
   string,
-  { selected: boolean; stats: TableRowStats; description?: string }
+  { label: string; selected: boolean; stats: TableRowStats; description?: string }
 >;
 
 type EnglishToolkitProps = {
@@ -45,10 +31,9 @@ const unitTypeOptions: { value: UnitType; label: string }[] = [
   { value: "OR", label: "Onset-Rime (OR)" },
   { value: "OC", label: "Onset-Coda (OC)" },
   { value: "ONC", label: "Onset-Nucleus-Coda (ONC)" },
-  { value: "Syllable", label: "Syllable" },
 ];
 
-const directionOptions: { value: Exclude<Directionality, null>; label: string; detail: string }[] = [
+const directionOptions: { value: Directionality; label: string; detail: string }[] = [
   { value: "Reading", label: "Reading", detail: "(Grapheme → Phoneme)" },
   { value: "Spelling", label: "Spelling", detail: "(Phoneme → Grapheme)" },
 ];
@@ -123,25 +108,6 @@ const phonologyOptionGroups = [
   },
 ] as const;
 
-// ---------- Helpers ----------
-function makeDisplayLabel(m: CatalogMeasure): string {
-  if (m.measureType === "Consistency") {
-    const dir = m.directionality ?? "Reading";
-    return `${m.unitType} ${dir} Consistency`;
-  }
-
-  const clean = (m.label || m.id).replace(/\.(mean|min|max|median|sd)$/i, "");
-  return clean;
-}
-
-function baseKey(m: CatalogMeasure): string {
-  // Remove stat suffix from id
-  const id = m.id
-    .replace(/\.mean$|\.min$|\.max$|\.median$|\.sd$/i, "");
-
-  return id; // every unique measure id (minus stats) is its own group
-}
-
 // ---------- Component ----------
 export default function EnglishToolkit({
   mode = "frequency-consistency",
@@ -154,7 +120,7 @@ export default function EnglishToolkit({
   // Multi-select state
   const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
   const [measureTypes, setMeasureTypes] = useState<MeasureType[]>([]);
-  const [directionalities, setDirectionalities] = useState<Exclude<Directionality, null>[]>([]);
+  const [directionalities, setDirectionalities] = useState<Directionality[]>([]);
   const [weightings, setWeightings] = useState<Weighting[]>([]);
   const [multiplePronunciations, setMultiplePronunciations] = useState<"Yes" | "No">("No");
   const [phonologyFormat, setPhonologyFormat] = useState<"standard" | "onset-rime">("standard");
@@ -168,47 +134,26 @@ export default function EnglishToolkit({
     }
   };
 
-  const handleMeasureToggle = (label: string) => {
+  const handleMeasureToggle = (key: string) => {
     setRows((prev) => ({
       ...prev,
-      [label]: { ...prev[label], selected: !prev[label].selected },
+      [key]: { ...prev[key], selected: !prev[key].selected },
     }));
   };
 
-  const handleStatToggle = (label: string, stat: keyof TableRowStats) => {
+  const handleStatToggle = (key: string, stat: Stat) => {
     setRows((prev) => ({
       ...prev,
-      [label]: {
-        ...prev[label],
-        stats: { ...prev[label].stats, [stat]: !prev[label].stats[stat] },
+      [key]: {
+        ...prev[key],
+        stats: { ...prev[key].stats, [stat]: !prev[key].stats[stat] },
       },
     }));
   };
 
   // -------- Apply --------
   const handleApply = () => {
-    if (mode === "phonology-orthography") {
-      const next = Object.fromEntries(
-        phonologyOptions.map((optionId) => [
-          optionId.replace("::", " — "),
-          {
-            selected: true,
-            stats: {
-              mean: true,
-              min: false,
-              max: false,
-              median: false,
-              standardDeviation: false,
-            },
-          },
-        ]),
-      );
-
-      setRows(next);
-      return;
-    }
-
-    const filtered = (measureCatalog as CatalogMeasure[]).filter((m) =>
+    const filtered = MEASURE_GROUPS.filter((m) =>
       // Unit Type filter
       (unitTypes.length === 0 || unitTypes.includes(m.unitType)) &&
 
@@ -222,50 +167,30 @@ export default function EnglishToolkit({
       (
         directionalities.length === 0 ||
         m.directionality === null || // allow measures with no directionality (Freq)
-        directionalities.includes(m.directionality as Exclude<Directionality, null>)
+        directionalities.includes(m.directionality)
       )
     );
 
-    
-
-    // Group by base (ignoring stat) and build table rows with stat checkboxes
+    // One table row per measure, with a checkbox for each summary statistic
     const next: TableRowsState = {};
-    const groups = new Map<string, CatalogMeasure[]>();
-
     for (const m of filtered) {
-      const key = baseKey(m);
-      const arr = groups.get(key) ?? [];
-      arr.push(m);
-      groups.set(key, arr);
-    }
-
-    for (const [, arr] of groups) {
-      const representative = arr[0];
-      const label = makeDisplayLabel(representative);
-
-      const stats: TableRowStats = {
-        mean: arr.some((x) => x.stat === "mean"),
-        min: arr.some((x) => x.stat === "min"),
-        max: arr.some((x) => x.stat === "max"),
-        median: arr.some((x) => x.stat === "median"),
-        standardDeviation: arr.some((x) => x.stat === "sd"),
-      };
-
-      next[label] = {
+      next[m.base] = {
+        label: m.label,
         selected: true,
-        stats,
-        description: representative.description,
+        stats: { mean: true, min: false },
+        description: m.base,
       };
     }
-    
-    console.log("Final groups:", Object.keys(next).length);
     setRows(next);
   };
 
   const handleViewResults = () => {
+    // Column names in all_measures.csv, e.g. "PG_default_PG.mean"
     const selectedMeasures = Object.entries(rows)
       .filter(([, data]) => data.selected)
-      .map(([label]) => label);
+      .flatMap(([base, data]) =>
+        STATS.filter((stat) => data.stats[stat]).map((stat) => columnName(base, stat)),
+      );
     const pendingPhonologyMeasures = phonologyOptions.map((optionId) =>
       optionId.replace("::", " — "),
     );
@@ -581,41 +506,37 @@ export default function EnglishToolkit({
                   <th>Measure</th>
                   <th>Mean</th>
                   <th>Min</th>
-                  <th>Max</th>
-                  <th>Median</th>
-                  <th>Standard Deviation</th>
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(rows).map(([label, data]) => (
-                  <tr key={label} className={`table-row ${data.selected ? "selected" : ""}`}>
+                {Object.entries(rows).map(([key, data]) => (
+                  <tr key={key} className={`table-row ${data.selected ? "selected" : ""}`}>
                     <td className="table-cell">
                       <label className="measure-label" title={data.description ?? ""}>
                         <input
                           type="checkbox"
                           checked={data.selected}
-                          onChange={() => handleMeasureToggle(label)}
+                          onChange={() => handleMeasureToggle(key)}
                           className="checkbox-input"
                         />
-                        <span className="measure-text">{label}</span>
+                        <span className="measure-text">{data.label}</span>
                       </label>
                     </td>
-                    {(["mean", "min", "max", "median", "standardDeviation"] as (keyof TableRowStats)[])
-                      .map((statKey) => (
-                        <td key={statKey} className="table-cell center">
-                          <input
-                            type="checkbox"
-                            checked={data.stats[statKey]}
-                            onChange={() => handleStatToggle(label, statKey)}
-                            className="checkbox-input"
-                          />
-                        </td>
+                    {STATS.map((statKey) => (
+                      <td key={statKey} className="table-cell center">
+                        <input
+                          type="checkbox"
+                          checked={data.stats[statKey]}
+                          onChange={() => handleStatToggle(key, statKey)}
+                          className="checkbox-input"
+                        />
+                      </td>
                     ))}
                   </tr>
                 ))}
                 {Object.keys(rows).length === 0 && (
                   <tr>
-                    <td className="table-cell" colSpan={6}>
+                    <td className="table-cell" colSpan={STATS.length + 1}>
                       Choose options and click <strong>Apply</strong> to populate measures.
                     </td>
                   </tr>
