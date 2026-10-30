@@ -1,4 +1,5 @@
 import { parseCsvRows, type CsvRow } from "./csvParsing";
+import { parseMapping, type Grain, type MappingUnit } from "./wordMapping";
 
 // Per-letter CSVs built from ../data by scripts/build-word-data.mjs
 // (runs automatically before `npm run dev` and `npm run build`).
@@ -12,6 +13,8 @@ export type WordEntry = {
   // Every mean/min measure column (and pp_*), keyed by its all_measures.csv
   // column name (e.g. "PG_default_PG.mean", "pp_mean").
   measures: Record<string, number | null>;
+  // Unit-by-unit phoneme/grapheme mappings; null when the toolkit could not map the word
+  mapping: Record<Grain, MappingUnit[] | null>;
 };
 
 export type LookupResult = {
@@ -38,7 +41,9 @@ function shardKey(word: string): string {
 function toEntry(row: CsvRow): WordEntry {
   const measures: Record<string, number | null> = {};
   for (const [column, value] of Object.entries(row)) {
-    if (!NON_MEASURE_COLUMNS.has(column)) measures[column] = toNumber(value);
+    if (!NON_MEASURE_COLUMNS.has(column) && !column.startsWith("map_")) {
+      measures[column] = toNumber(value);
+    }
   }
   return {
     spelling: String(row.spelling),
@@ -46,6 +51,7 @@ function toEntry(row: CsvRow): WordEntry {
     freq: toNumber(row.freq),
     syllables: toNumber(row.syllables),
     measures,
+    mapping: { PG: parseMapping(row, "PG"), OR: parseMapping(row, "OR") },
   };
 }
 

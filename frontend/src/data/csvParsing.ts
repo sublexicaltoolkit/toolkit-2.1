@@ -48,7 +48,9 @@ const baseConfig = {
   skipEmptyLines: true,
   transformHeader: cleanHeader,
   transform: cleanValue,
-  dynamicTyping: (field: string | number) => !TEXT_COLUMNS.has(String(field)),
+  // "map_" columns hold unit lists like "h|E|l|o" (a single unit can look numeric, e.g. "8")
+  dynamicTyping: (field: string | number) =>
+    !TEXT_COLUMNS.has(String(field)) && !String(field).startsWith("map_"),
 } satisfies Papa.ParseConfig<CsvRow>;
 
 /**

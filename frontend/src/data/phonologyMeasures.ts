@@ -12,7 +12,7 @@ const CONSONANTS = [
   "r", "s", "S", "t", "v", "w", "z",
 ];
 const ALL_PHONEMES = [...VOWELS, ...CONSONANTS];
-const VOWEL_SET = new Set(VOWELS);
+export const VOWEL_SET = new Set(VOWELS);
 
 // Split a pronunciation like "skul" into phonemes ["s", "k", "u", "l"].
 export function splitPhonemes(pronunciation: string): string[] {
