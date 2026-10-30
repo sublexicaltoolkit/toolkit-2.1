@@ -86,10 +86,19 @@ export function columnName(base: string, stat: Stat): string {
 
 const GROUPS_BY_BASE = new Map(MEASURE_GROUPS.map((group) => [group.base, group]));
 
-// "PG_default_PG.mean" -> "PG Reading Consistency (Type, Positional) — Mean"
-export function columnLabel(column: string): string {
+// "PG_default_PG.mean" -> { group: <PG_default_PG>, statLabel: "Mean" }
+export function columnParts(
+  column: string,
+): { group: MeasureGroup; statLabel: string } | null {
   const [base, stat] = column.split(".");
   const group = GROUPS_BY_BASE.get(base);
-  if (!group) return column;
-  return `${group.label} — ${stat === "mean" ? "Mean" : "Min"}`;
+  if (!group) return null;
+  return { group, statLabel: stat === "mean" ? "Mean" : "Min" };
+}
+
+// "PG_default_PG.mean" -> "PG Reading Consistency (Type, Positional) — Mean"
+export function columnLabel(column: string): string {
+  const parts = columnParts(column);
+  if (!parts) return column;
+  return `${parts.group.label} — ${parts.statLabel}`;
 }

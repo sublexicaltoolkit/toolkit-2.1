@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
-import { columnLabel } from "../data/measureColumns";
+import WordBreakdown from "../components/WordBreakdown";
+import { columnParts } from "../data/measureColumns";
 import {
   PHONOLOGY_COLUMNS,
   onsetRime,
@@ -29,7 +30,14 @@ type TableRow = {
   onset: string;
   rime: string;
   values: string[];
+  csvValues: string[];
+  // A word with several pronunciations, listed in the homograph table instead
+  isHomograph?: boolean;
 };
+
+type HeaderGroup = { label: string; span: number };
+
+const DEFAULT_GROUP = "Selected Variables";
 
 const resultConfig: Record<
   ResultVariant,
@@ -74,6 +82,27 @@ function formatValue(value: number | string | null | undefined): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(4);
 }
 
+function formatDisplay(value: number | string | null | undefined, percent?: boolean): string {
+  if (percent && typeof value === "number") return `${(value * 100).toFixed(2)}%`;
+  return formatValue(value);
+}
+
+// Merge neighbouring columns with the same group into one spanning header.
+function headerGroups(columns: ResultColumn[]): HeaderGroup[] {
+  const groups: HeaderGroup[] = [];
+  for (const column of columns) {
+    const label = column.group ?? DEFAULT_GROUP;
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.span += 1;
+    else groups.push({ label, span: 1 });
+  }
+  return groups;
+}
+
+function csvHeader(column: ResultColumn): string {
+  return column.group ? `${column.group} — ${column.header}` : column.header;
+}
+
 // Keep only the first listed pronunciation of each word.
 function firstPronunciations(entries: WordEntry[]): WordEntry[] {
   const seen = new Set<string>();
@@ -92,10 +121,15 @@ function resolveColumns(
 ): { columns: ResultColumn[]; unavailable: string[] } {
   if (variant === "frequency-consistency") {
     return {
-      columns: measures.map((column) => ({
-        header: columnLabel(column),
-        value: (entry) => entry.measures[column] ?? null,
-      })),
+      columns: measures.map((column) => {
+        const parts = columnParts(column);
+        return {
+          header: parts?.statLabel ?? column,
+          group: parts?.group.label,
+          percent: parts?.group.measureType === "Consistency",
+          value: (entry) => entry.measures[column] ?? null,
+        };
+      }),
       unavailable: [],
     };
   }
@@ -108,6 +142,7 @@ function resolveColumns(
 
 export default function ToolkitResults({ variant }: ToolkitResultsProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const state = (location.state ?? {}) as ResultsState;
   const isDemo = new URLSearchParams(location.search).has("demo");
   const config = resultConfig[variant];
@@ -157,8 +192,39 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
     word: entry.spelling,
     pronunciation: entry.pronunciation,
     ...onsetRime(entry.pronunciation),
-    values: columns.map((column) => formatValue(column.value(entry))),
+    values: columns.map((column) => formatDisplay(column.value(entry), column.percent)),
+    csvValues: columns.map((column) => formatValue(column.value(entry))),
   }));
+  const groups = headerGroups(columns);
+
+  // Frequency & consistency: a word with several pronunciations gets one "homograph"
+  // row in the main table, and its pronunciations are listed in a table of their own.
+  const showHomographs =
+    variant === "frequency-consistency" && state.multiplePronunciations === "Yes";
+  const pronunciationCounts = new Map<string, number>();
+  for (const entry of entries) {
+    pronunciationCounts.set(entry.spelling, (pronunciationCounts.get(entry.spelling) ?? 0) + 1);
+  }
+  const isHomograph = (spelling: string) =>
+    showHomographs && (pronunciationCounts.get(spelling) ?? 0) > 1;
+  const mainRows: TableRow[] = [];
+  const homographTableRows: (TableRow & { number: number })[] = [];
+  for (const row of tableRows) {
+    if (!isHomograph(row.word)) {
+      mainRows.push(row);
+      continue;
+    }
+    const number = homographTableRows.filter((other) => other.word === row.word).length + 1;
+    if (number === 1) {
+      mainRows.push({ ...row, pronunciation: "homograph", isHomograph: true });
+    }
+    homographTableRows.push({ ...row, number });
+  }
+
+  // Phonology & orthography: which word the breakdown cards show
+  const [selected, setSelected] = useState({ wordsKey: "", index: 0 });
+  const selectedIndex = selected.wordsKey === wordsKey ? selected.index : 0;
+  const showBreakdown = variant !== "frequency-consistency" && entries.length > 0;
 
   const notFound = lookup?.notFound ?? [];
   const nothingFound = lookup !== null && tableRows.length === 0;
@@ -169,13 +235,13 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
       "Word",
       "Pronunciation",
       ...(hasOnsetRimeColumns ? ["Onset", "Rime"] : []),
-      ...columns.map((column) => column.header),
+      ...columns.map(csvHeader),
     ];
     const rows = tableRows.map((row) => [
       row.word,
       row.pronunciation,
       ...(hasOnsetRimeColumns ? [row.onset, row.rime] : []),
-      ...row.values.map((value) => (value === "—" ? "" : value)),
+      ...row.csvValues.map((value) => (value === "—" ? "" : value)),
     ]);
     const csv = [headers, ...rows]
       .map((row) => row.map(escapeCsv).join(","))
@@ -206,21 +272,17 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
             </span>
             {isDemo && <span className="demo-badge">Demo data</span>}
           </div>
-
-          <div className="results-actions">
-            <Link className="secondary-button" to={config.searchPath}>
-              Edit search
-            </Link>
-            <button
-              className="action-button"
-              type="button"
-              onClick={downloadCsv}
-              disabled={isLoading}
-            >
-              Download CSV
-            </button>
-          </div>
         </header>
+
+        {showBreakdown && (
+          <WordBreakdown
+            entries={entries}
+            selectedIndex={selectedIndex}
+            onSelect={(index) => setSelected({ wordsKey, index })}
+            multiplePronunciations={state.multiplePronunciations ?? "No"}
+            sortByOnsetRime={variant === "onset-rime"}
+          />
+        )}
 
         <section className="results-table-card" aria-label={config.title}>
           <div className="results-table-heading">
@@ -241,13 +303,15 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
             <table className="results-table">
               <thead>
                 <tr className="results-group-header">
-                  <th colSpan={inputColumnCount}>Input</th>
-                  {columns.length > 0 && (
-                    <th colSpan={columns.length}>Selected Variables</th>
-                  )}
+                  <th colSpan={inputColumnCount} aria-label="Input" />
+                  {groups.map((group, index) => (
+                    <th key={`${group.label}-${index}`} colSpan={group.span}>
+                      {group.label}
+                    </th>
+                  ))}
                 </tr>
-                <tr>
-                  <th>Word</th>
+                <tr className="results-subheader">
+                  <th>Word Inputs</th>
                   <th>Pronunciation</th>
                   {hasOnsetRimeColumns && (
                     <>
@@ -255,17 +319,19 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                       <th>Rime</th>
                     </>
                   )}
-                  {columns.map((column) => (
-                    <th key={column.header}>{column.header}</th>
+                  {columns.map((column, index) => (
+                    <th key={`${csvHeader(column)}-${index}`}>{column.header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rowCount > 0 ? (
-                  tableRows.map((row, index) => (
+                  mainRows.map((row, index) => (
                     <tr key={`${row.word}-${row.pronunciation}-${index}`}>
-                      <td>{row.word}</td>
-                      <td>{row.pronunciation}</td>
+                      <td className="results-word">{row.word}</td>
+                      <td className={row.isHomograph ? "results-homograph" : undefined}>
+                        {row.pronunciation}
+                      </td>
                       {hasOnsetRimeColumns && (
                         <>
                           <td>{row.onset || "—"}</td>
@@ -273,7 +339,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                         </>
                       )}
                       {row.values.map((value, columnIndex) => (
-                        <td key={columns[columnIndex].header}>{value}</td>
+                        <td key={columnIndex}>{row.isHomograph ? "—" : value}</td>
                       ))}
                     </tr>
                   ))
@@ -291,6 +357,77 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
             </table>
           </div>
         </section>
+
+        {homographTableRows.length > 0 && (
+          <section className="results-table-card homograph-card" aria-label="Homographs">
+            <div className="results-table-scroll">
+              <table className="results-table homograph-table">
+                <thead>
+                  <tr className="results-group-header">
+                    <th colSpan={3} aria-label="Homograph" />
+                    {groups.map((group, index) => (
+                      <th key={`${group.label}-${index}`} colSpan={group.span}>
+                        {group.label}
+                      </th>
+                    ))}
+                  </tr>
+                  <tr className="results-subheader">
+                    <th>Spelling</th>
+                    <th>Homographs</th>
+                    <th>Pronunciation</th>
+                    {columns.map((column, index) => (
+                      <th key={`${csvHeader(column)}-${index}`}>{column.header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {homographTableRows.map((row) => (
+                    <tr key={`${row.word}-${row.pronunciation}`}>
+                      <td>{row.word}</td>
+                      <td>{row.number}</td>
+                      <td>{row.pronunciation}</td>
+                      {row.values.map((value, columnIndex) => (
+                        <td key={columnIndex}>{value}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        <div className="results-actions">
+          {variant !== "frequency-consistency" && (
+            <>
+              <Link className="clear-button" to={config.searchPath}>
+                Clear All
+              </Link>
+              <button
+                className="log-button"
+                type="button"
+                onClick={() =>
+                  navigate("/english/frequency-consistency/results", {
+                    state: { words, multiplePronunciations: state.multiplePronunciations },
+                  })
+                }
+              >
+                Log Data
+              </button>
+            </>
+          )}
+          <button
+            className="download-button"
+            type="button"
+            onClick={downloadCsv}
+            disabled={isLoading}
+          >
+            Download results
+          </button>
+          <Link className="back-button" to={config.searchPath}>
+            Back
+          </Link>
+        </div>
       </main>
     </Layout>
   );

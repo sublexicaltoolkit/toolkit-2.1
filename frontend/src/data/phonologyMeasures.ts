@@ -41,6 +41,10 @@ export function onsetRime(pronunciation: string): { onset: string; rime: string 
 export type ResultColumn = {
   header: string;
   value: (entry: WordEntry) => number | string | null;
+  // Columns sharing a group sit under one spanning header (e.g. a measure over Mean/Min)
+  group?: string;
+  // Consistency values are proportions, shown as percentages on screen
+  percent?: boolean;
 };
 
 // Phonology & Orthography options (as "Group — Option") that have data so far.
@@ -62,10 +66,12 @@ export const PHONOLOGY_COLUMNS: Record<string, ResultColumn[]> = {
     {
       header: "PG Reading Consistency — Mean",
       value: (e) => e.measures["PG_default_PG.mean"] ?? null,
+      percent: true,
     },
     {
       header: "PG Spelling Consistency — Mean",
       value: (e) => e.measures["PG_default_GP.mean"] ?? null,
+      percent: true,
     },
   ],
 };

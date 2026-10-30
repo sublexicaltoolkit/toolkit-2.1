@@ -627,27 +627,237 @@
 
 .results-actions {
   display: flex;
-  flex-shrink: 0;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
-.secondary-button {
+.download-button,
+.back-button {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1.5rem;
-  border: 1px solid #111111;
-  border-radius: 0.25rem;
-  color: #111111;
+  justify-content: center;
+  padding: 0.6rem 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.9375rem;
   font-weight: 500;
   text-decoration: none;
+  cursor: pointer;
+}
+
+.download-button {
+  background: #3fa2ed;
+}
+
+.download-button:hover {
+  background: #2b8fd9;
+}
+
+.download-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.back-button {
+  background: #000000;
+}
+
+.clear-button {
+  background: #b3261e;
+}
+
+.clear-button:hover {
+  background: #93201a;
+}
+
+.log-button {
+  background: #2f6b3a;
+}
+
+.log-button:hover {
+  background: #25562e;
+}
+
+.clear-button,
+.log-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.homograph-card {
+  margin-top: 2rem;
+}
+
+.results-table td.results-homograph {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ---------- Phonology & Orthography breakdown cards (Figma "hello" demo) ---------- */
+.word-breakdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.breakdown-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.breakdown-arrow {
+  color: #8fb8d8;
+  font-size: 2rem;
+}
+
+.breakdown-card {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.breakdown-card-title {
+  margin: 0;
+  padding: 0.9rem 1.25rem;
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.breakdown-card-blue .breakdown-card-title {
+  background: #6a9fc6;
+}
+
+.breakdown-card-slate .breakdown-card-title {
+  padding: 1.25rem;
+  background: #657189;
+}
+
+.breakdown-entered {
+  flex: 0 0 auto;
+  min-width: 280px;
+}
+
+.breakdown-entered-list {
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.breakdown-entered-list > div {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.875rem;
+}
+
+.breakdown-entered-list > div:last-child {
+  margin-bottom: 0;
+}
+
+.breakdown-entered-list dt {
+  font-weight: 700;
+}
+
+.breakdown-entered-list dd {
+  margin: 0;
+}
+
+.breakdown-word-select {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
+.breakdown-average {
+  flex: 0 1 620px;
+}
+
+.breakdown-grid {
+  width: 100%;
+}
+
+.breakdown-grid-narrow {
+  width: min(380px, 100%);
+}
+
+.breakdown-calculated {
+  width: min(620px, 100%);
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.breakdown-table th,
+.breakdown-table td {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.breakdown-table thead th {
+  background: #e3e9f0;
+  color: #111827;
+  font-weight: 600;
+}
+
+.breakdown-table .breakdown-group-row th {
+  background: #c9d4e2;
+}
+
+.breakdown-table tbody th {
+  width: 1%;
+  padding-inline: 1.25rem;
+  background: #ffffff;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.breakdown-grid .breakdown-table tbody td {
+  background: #f3f4f6;
+}
+
+.breakdown-grid .breakdown-table tbody th {
+  font-weight: 500;
+}
+
+.breakdown-table .breakdown-rime-start {
+  border-left: 2px solid #9aa6b8;
+}
+
+.back-button:hover {
+  background: #374151;
 }
 
 .results-table-card {
   overflow: hidden;
-  border: 1px solid #dbe3ec;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   background: #ffffff;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .results-table-heading {
@@ -681,41 +891,54 @@
 
 .results-table th,
 .results-table td {
-  min-width: 150px;
+  min-width: 90px;
   padding: 0.875rem 1rem;
-  border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-  vertical-align: top;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .results-table th {
-  background: #f8fafc;
-  color: #1f2937;
+  color: #111827;
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
+/* Slate measure-name row, light sub-header row (Mean / Min), as in the Figma */
 .results-table .results-group-header th {
-  background: #dbeafe;
-  color: #1e3a8a;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  padding: 1.25rem 1rem;
+  background: #657189;
+  color: #ffffff;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
 }
 
-.results-table tbody tr:nth-child(even) {
-  background: #f8fafc;
+.results-table .results-group-header th:first-child {
+  border-left: 0;
+}
+
+.results-table .results-subheader th {
+  background: #e3e9f0;
+}
+
+.results-table tbody {
+  counter-reset: result-row;
 }
 
 .results-table td {
-  color: #374151;
+  color: #1f2937;
   font-size: 0.875rem;
 }
 
-.results-table th:last-child,
-.results-table td:last-child {
-  border-right: 0;
+.results-table td.results-word {
+  text-align: left;
+  counter-increment: result-row;
+}
+
+.results-table td.results-word::before {
+  content: counter(result-row);
+  display: inline-block;
+  min-width: 1.75rem;
+  color: #6b7280;
 }
 
 .results-table .results-empty {
@@ -756,13 +979,28 @@
   }
 
   .results-actions {
-    width: 100%;
+    flex-wrap: wrap;
   }
 
   .results-actions > * {
     flex: 1;
-    justify-content: center;
-    text-align: center;
+  }
+
+  .breakdown-summary-row {
+    flex-direction: column;
+  }
+
+  .breakdown-arrow {
+    transform: rotate(90deg);
+  }
+
+  .breakdown-entered,
+  .breakdown-average {
+    width: 100%;
+  }
+
+  .breakdown-grid {
+    overflow-x: auto;
   }
 
   .main-container {
