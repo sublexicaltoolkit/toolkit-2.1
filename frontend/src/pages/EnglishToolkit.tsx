@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./EnglishToolkit.css";
 import Layout from "../components/Layout";
+import { parseWordFile } from "../data/csvParsing";
 import {
   MEASURE_GROUPS,
   STATS,
@@ -114,6 +115,9 @@ export default function EnglishToolkit({
 }: EnglishToolkitProps) {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadedWords, setUploadedWords] = useState<string[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [letterInput, setLetterInput] = useState("");
   const [phonemeInput, setPhonemeInput] = useState("");
 
@@ -128,10 +132,37 @@ export default function EnglishToolkit({
 
   const [rows, setRows] = useState<TableRowsState>({});
 
+  const handleFile = (file: File) => {
+    setFileName(file.name);
+    setUploadedWords([]);
+    setUploadError(null);
+    parseWordFile(file)
+      .then((words) => {
+        setUploadedWords(words);
+        if (words.length === 0) setUploadError("No words found in the first column.");
+      })
+      .catch((err: Error) => setUploadError(`Could not read file: ${err.message}`));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFileName(e.target.files[0].name);
+      handleFile(e.target.files[0]);
     }
+    // Allow picking the same file again after removing it
+    e.target.value = "";
+  };
+
+  const handleFileDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setFileName(null);
+    setUploadedWords([]);
+    setUploadError(null);
   };
 
   const handleMeasureToggle = (key: string) => {
@@ -195,10 +226,13 @@ export default function EnglishToolkit({
       optionId.replace("::", " — "),
     );
     const searchState = {
-      words: letterInput
-        .split(/[\n,]+/)
-        .map((word) => word.trim())
-        .filter(Boolean),
+      words: [
+        ...letterInput
+          .split(/[\n,]+/)
+          .map((word) => word.trim())
+          .filter(Boolean),
+        ...uploadedWords,
+      ],
       phonemes: phonemeInput
         .split(/[\n,]+/)
         .map((phoneme) => phoneme.trim())
@@ -263,7 +297,15 @@ export default function EnglishToolkit({
             Upload a csv/txt file containing a list of words in the first column only:
           </h5>
           <div className="file-upload-container">
-            <label className="file-upload-label">
+            <label
+              className={`file-upload-label${isDragging ? " dragging" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleFileDrop}
+            >
               <input
                 type="file"
                 accept=".csv,.txt"
@@ -276,7 +318,17 @@ export default function EnglishToolkit({
               <span className="browse-button">Browse</span>
             </label>
           </div>
-          {fileName && <p className="file-name">Uploaded: {fileName}</p>}
+          {fileName && (
+            <p className="file-name">
+              Uploaded: {fileName}
+              {uploadedWords.length > 0 &&
+                ` (${uploadedWords.length} ${uploadedWords.length === 1 ? "word" : "words"})`}
+              <button type="button" className="file-remove" onClick={handleRemoveFile}>
+                Remove
+              </button>
+            </p>
+          )}
+          {uploadError && <p className="file-error">{uploadError}</p>}
         </div>
 
         {mode === "phonology-orthography" && (

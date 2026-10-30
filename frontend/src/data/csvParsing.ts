@@ -20,6 +20,29 @@ function cleanValue(value: string): string {
   return value === "NA" ? "" : value;
 }
 
+// A first cell like "word" or "Spelling" is treated as a header and skipped.
+const WORD_HEADERS = new Set(["word", "words", "spelling", "item", "items", "stimulus", "stimuli"]);
+
+/**
+ * Read the words in the first column of an uploaded .csv or .txt file
+ * (one word per line also works; PapaParse guesses the delimiter).
+ */
+export function parseWordFile(file: File): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    Papa.parse<string[]>(file, {
+      skipEmptyLines: true,
+      complete: ({ data }) => {
+        const words = data
+          .map((row) => String(row[0] ?? "").replace(BYTE_ORDER_MARK, "").trim())
+          .filter(Boolean);
+        if (words.length > 0 && WORD_HEADERS.has(words[0].toLowerCase())) words.shift();
+        resolve(words);
+      },
+      error: (err: Error) => reject(err),
+    });
+  });
+}
+
 const baseConfig = {
   header: true,
   skipEmptyLines: true,

@@ -382,6 +382,29 @@
   color: #374151;
 }
 
+.file-upload-label.dragging {
+  background-color: #eff6ff;
+  outline: 2px dashed #60a5fa;
+  outline-offset: -6px;
+}
+
+.file-remove {
+  margin-left: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #2563eb;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.file-error {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+}
+
 .sidebar-options {
   padding-top: 0.25rem;
   border-top: 1px solid rgba(31, 41, 55, 0.18);
