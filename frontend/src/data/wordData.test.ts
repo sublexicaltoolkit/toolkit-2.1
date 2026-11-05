@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { parseCsvRows, type CsvRow } from "./csvParsing";
 import { MEASURE_GROUPS, STATS, columnName } from "./measureColumns";
-import { PHONOLOGY_COLUMNS } from "./phonologyMeasures";
+import { GENERAL_VARIABLES } from "./phonologyMeasures";
 import { lookupWords } from "./wordData";
 
 // Uses the real files from scripts/build-word-data.mjs (run by `npm test`),
@@ -70,26 +70,24 @@ describe("data columns used by the pages", () => {
   const header = readFileSync(join(WORD_DATA_DIR, "a.csv"), "utf8").split("\n")[0];
   const columns = new Set(header.split(",").map((column) => column.replaceAll('"', "")));
 
-  it("include every frequency & consistency column", () => {
+  it("include every toolkit measure column", () => {
     const missing = MEASURE_GROUPS.flatMap((group) =>
       STATS.map((stat) => columnName(group.base, stat)),
     ).filter((column) => !columns.has(column));
     expect(missing).toEqual([]);
   });
 
-  it("give values for every phonology option with data", async () => {
+  it("give values for every general variable", async () => {
     const { entries } = await lookupWords(["cat"]);
-    const values = Object.values(PHONOLOGY_COLUMNS)
-      .flat()
-      .map((column) => [column.header, column.value(entries[0])]);
+    const values = GENERAL_VARIABLES.map((variable) => [
+      variable.label,
+      variable.column.value(entries[0]),
+    ]);
 
     expect(Object.fromEntries(values)).toEqual({
-      "Frequency (SUBTLEX-US count)": 3383,
+      "Whole-Word Frequency": 3383,
       "Orthographic Length": 3,
       "Phonological Length": 3,
-      "First Phoneme": "k",
-      "PG Reading Consistency — Mean": entries[0].measures["PG_default_PG.mean"],
-      "PG Spelling Consistency — Mean": entries[0].measures["PG_default_GP.mean"],
     });
   });
 });

@@ -1,34 +1,25 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Layout from "../components/Layout";
 import WordBreakdown from "../components/WordBreakdown";
 import { columnParts } from "../data/measureColumns";
-import {
-  PHONOLOGY_COLUMNS,
-  onsetRime,
-  type ResultColumn,
-} from "../data/phonologyMeasures";
+import { GENERAL_VARIABLES, type ResultColumn } from "../data/phonologyMeasures";
 import { lookupWords, type LookupResult, type WordEntry } from "../data/wordData";
 import "./EnglishToolkit.css";
-
-type ResultVariant = "frequency-consistency" | "standard" | "onset-rime";
 
 type ResultsState = {
   words?: string[];
   phonemes?: string[];
+  // GENERAL_VARIABLES ids, e.g. "frequency"
+  general?: string[];
+  // all_measures.csv column names, e.g. "PG_default_PG.mean"
   measures?: string[];
   multiplePronunciations?: "Yes" | "No";
-};
-
-type ToolkitResultsProps = {
-  variant: ResultVariant;
 };
 
 type TableRow = {
   word: string;
   pronunciation: string;
-  onset: string;
-  rime: string;
   values: string[];
   csvValues: string[];
   // A word with several pronunciations, listed in the homograph table instead
@@ -39,38 +30,10 @@ type HeaderGroup = { label: string; span: number };
 
 const DEFAULT_GROUP = "Selected Variables";
 
-const resultConfig: Record<
-  ResultVariant,
-  { eyebrow: string; title: string; searchPath: string; fallbackMeasures: string[] }
-> = {
-  "frequency-consistency": {
-    eyebrow: "Frequency & Consistency",
-    title: "Frequency and Consistency Log Results",
-    searchPath: "/english/frequency-consistency/search",
-    fallbackMeasures: ["PG_default_PG.mean", "PG_default_GP.mean", "PG_default_PG_freq.mean"],
-  },
-  standard: {
-    eyebrow: "Phonology & Orthography",
-    title: "Phonology and Orthography Results",
-    searchPath: "/english/phonology-orthography/search",
-    fallbackMeasures: [
-      "General — Frequency",
-      "Orthographic — Orthographic Length",
-      "Phonological — Phonological Length",
-      "Ortho-Phon — Consistency",
-    ],
-  },
-  "onset-rime": {
-    eyebrow: "Phonology & Orthography",
-    title: "Onset and Rime Results",
-    searchPath: "/english/phonology-orthography/search",
-    fallbackMeasures: [
-      "Phonological — First Phoneme",
-      "Phonological — Phonological Length",
-      "Ortho-Phon — Consistency",
-    ],
-  },
-};
+const TITLE = "Toolkit Results";
+const SEARCH_PATH = "/english";
+const DEMO_GENERAL = GENERAL_VARIABLES.map((variable) => variable.id);
+const DEMO_MEASURES = ["PG_default_PG.mean", "PG_default_GP.mean", "pp_mean"];
 
 function escapeCsv(value: string) {
   return `"${value.replaceAll('"', '""')}"`;
@@ -113,52 +76,40 @@ function firstPronunciations(entries: WordEntry[]): WordEntry[] {
   });
 }
 
-// Frequency & consistency measures are all_measures.csv column names;
-// phonology options are "Group — Option" labels mapped in PHONOLOGY_COLUMNS.
-function resolveColumns(
-  variant: ResultVariant,
-  measures: string[],
-): { columns: ResultColumn[]; unavailable: string[] } {
-  if (variant === "frequency-consistency") {
+// General variables come first, then the Toolkit measure columns.
+function resolveColumns(general: string[], measures: string[]): ResultColumn[] {
+  const generalColumns = GENERAL_VARIABLES.filter((variable) =>
+    general.includes(variable.id),
+  ).map((variable) => variable.column);
+  const measureColumns = measures.map((column): ResultColumn => {
+    const parts = columnParts(column);
     return {
-      columns: measures.map((column) => {
-        const parts = columnParts(column);
-        return {
-          header: parts?.statLabel ?? column,
-          group: parts?.group.label,
-          percent: parts?.group.measureType === "Consistency",
-          value: (entry) => entry.measures[column] ?? null,
-        };
-      }),
-      unavailable: [],
+      header: parts?.statLabel ?? column,
+      group: parts?.group.label,
+      percent:
+        parts?.group.measureType === "Consistency" ||
+        parts?.group.measureType === "Parsing Probability",
+      value: (entry) => entry.measures[column] ?? null,
     };
-  }
-
-  return {
-    columns: measures.flatMap((measure) => PHONOLOGY_COLUMNS[measure] ?? []),
-    unavailable: measures.filter((measure) => !PHONOLOGY_COLUMNS[measure]),
-  };
+  });
+  return [...generalColumns, ...measureColumns];
 }
 
-export default function ToolkitResults({ variant }: ToolkitResultsProps) {
+export default function ToolkitResults() {
   const location = useLocation();
-  const navigate = useNavigate();
   const state = (location.state ?? {}) as ResultsState;
   const isDemo = new URLSearchParams(location.search).has("demo");
-  const config = resultConfig[variant];
-  const measures =
-    state.measures && state.measures.length > 0
-      ? state.measures
-      : config.fallbackMeasures;
+  const hasSelection = Boolean(state.general?.length || state.measures?.length);
+  const general = hasSelection ? (state.general ?? []) : DEMO_GENERAL;
+  const measures = hasSelection ? (state.measures ?? []) : DEMO_MEASURES;
   const words =
     state.words && state.words.length > 0
       ? state.words
       : isDemo
         ? ["cat", "light", "school"]
         : [];
-  const hasOnsetRimeColumns = variant === "onset-rime";
-  const inputColumnCount = hasOnsetRimeColumns ? 4 : 2;
-  const { columns, unavailable } = resolveColumns(variant, measures);
+  const columns = resolveColumns(general, measures);
+  const inputColumnCount = 2;
 
   const wordsKey = words.join("\n");
   const [lookup, setLookup] = useState<LookupResult | null>(null);
@@ -191,16 +142,14 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
   const tableRows: TableRow[] = entries.map((entry) => ({
     word: entry.spelling,
     pronunciation: entry.pronunciation,
-    ...onsetRime(entry.pronunciation),
     values: columns.map((column) => formatDisplay(column.value(entry), column.percent)),
     csvValues: columns.map((column) => formatValue(column.value(entry))),
   }));
   const groups = headerGroups(columns);
 
-  // Frequency & consistency: a word with several pronunciations gets one "homograph"
+  // A word with several pronunciations gets one "homograph"
   // row in the main table, and its pronunciations are listed in a table of their own.
-  const showHomographs =
-    variant === "frequency-consistency" && state.multiplePronunciations === "Yes";
+  const showHomographs = state.multiplePronunciations === "Yes";
   const pronunciationCounts = new Map<string, number>();
   for (const entry of entries) {
     pronunciationCounts.set(entry.spelling, (pronunciationCounts.get(entry.spelling) ?? 0) + 1);
@@ -221,26 +170,20 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
     homographTableRows.push({ ...row, number });
   }
 
-  // Phonology & orthography: which word the breakdown cards show
+  // Which word the breakdown cards show
   const [selected, setSelected] = useState({ wordsKey: "", index: 0 });
   const selectedIndex = selected.wordsKey === wordsKey ? selected.index : 0;
-  const showBreakdown = variant !== "frequency-consistency" && entries.length > 0;
+  const showBreakdown = entries.length > 0;
 
   const notFound = lookup?.notFound ?? [];
   const nothingFound = lookup !== null && tableRows.length === 0;
   const rowCount = tableRows.length;
 
   const downloadCsv = () => {
-    const headers = [
-      "Word",
-      "Pronunciation",
-      ...(hasOnsetRimeColumns ? ["Onset", "Rime"] : []),
-      ...columns.map(csvHeader),
-    ];
+    const headers = ["Word", "Pronunciation", ...columns.map(csvHeader)];
     const rows = tableRows.map((row) => [
       row.word,
       row.pronunciation,
-      ...(hasOnsetRimeColumns ? [row.onset, row.rime] : []),
       ...row.csvValues.map((value) => (value === "—" ? "" : value)),
     ]);
     const csv = [headers, ...rows]
@@ -249,7 +192,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${variant}-results.csv`;
+    anchor.download = "toolkit-results.csv";
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -262,7 +205,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
       "Nothing was found for this query. Try fine-tuning your words, or contact the team listed on the About page.";
 
   return (
-    <Layout variant="app" pageTitle={config.title}>
+    <Layout variant="app" pageTitle={TITLE}>
       <main className="results-page">
         <header className="results-header">
           <div className="results-meta">
@@ -280,11 +223,11 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
             selectedIndex={selectedIndex}
             onSelect={(index) => setSelected({ wordsKey, index })}
             multiplePronunciations={state.multiplePronunciations ?? "No"}
-            sortByOnsetRime={variant === "onset-rime"}
+            sortByOnsetRime={false}
           />
         )}
 
-        <section className="results-table-card" aria-label={config.title}>
+        <section className="results-table-card" aria-label={TITLE}>
           <div className="results-table-heading">
             <h2>Results</h2>
             <span>{rowCount} {rowCount === 1 ? "row" : "rows"}</span>
@@ -293,12 +236,6 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
           {notFound.length > 0 && !nothingFound && (
             <p className="results-not-found">Not found: {notFound.join(", ")}</p>
           )}
-          {unavailable.length > 0 && (
-            <p className="results-not-found">
-              Not available yet: {unavailable.join(", ")}
-            </p>
-          )}
-
           <div className="results-table-scroll">
             <table className="results-table">
               <thead>
@@ -313,12 +250,6 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                 <tr className="results-subheader">
                   <th>Word Inputs</th>
                   <th>Pronunciation</th>
-                  {hasOnsetRimeColumns && (
-                    <>
-                      <th>Onset</th>
-                      <th>Rime</th>
-                    </>
-                  )}
                   {columns.map((column, index) => (
                     <th key={`${csvHeader(column)}-${index}`}>{column.header}</th>
                   ))}
@@ -332,12 +263,6 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
                       <td className={row.isHomograph ? "results-homograph" : undefined}>
                         {row.pronunciation}
                       </td>
-                      {hasOnsetRimeColumns && (
-                        <>
-                          <td>{row.onset || "—"}</td>
-                          <td>{row.rime || "—"}</td>
-                        </>
-                      )}
                       {row.values.map((value, columnIndex) => (
                         <td key={columnIndex}>{row.isHomograph ? "—" : value}</td>
                       ))}
@@ -398,24 +323,6 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
         )}
 
         <div className="results-actions">
-          {variant !== "frequency-consistency" && (
-            <>
-              <Link className="clear-button" to={config.searchPath}>
-                Clear All
-              </Link>
-              <button
-                className="log-button"
-                type="button"
-                onClick={() =>
-                  navigate("/english/frequency-consistency/results", {
-                    state: { words, multiplePronunciations: state.multiplePronunciations },
-                  })
-                }
-              >
-                Log Data
-              </button>
-            </>
-          )}
           <button
             className="download-button"
             type="button"
@@ -424,7 +331,7 @@ export default function ToolkitResults({ variant }: ToolkitResultsProps) {
           >
             Download results
           </button>
-          <Link className="back-button" to={config.searchPath}>
+          <Link className="back-button" to={SEARCH_PATH}>
             Back
           </Link>
         </div>

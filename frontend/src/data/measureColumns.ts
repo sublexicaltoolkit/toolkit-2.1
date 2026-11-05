@@ -6,9 +6,12 @@
 //   target:  PG | GP            -> consistency (directional)
 //            PG_freq | G_freq | P_freq -> frequency (bidirectional)
 //   stat:    only mean and min are shown
+//
+// Parsing probability (PP) columns are named differently: pp_<stat> (type weighted)
+// and pp_freq_<stat> (token weighted). They have no unit type or direction.
 
 export type UnitType = "PG" | "OR" | "OC" | "ONC";
-export type MeasureType = "Frequency" | "Consistency";
+export type MeasureType = "Frequency" | "Consistency" | "Parsing Probability";
 export type Directionality = "Reading" | "Spelling";
 export type Weighting = "Token" | "Type";
 export type Stat = "mean" | "min";
@@ -16,7 +19,8 @@ export type Stat = "mean" | "min";
 export type MeasureGroup = {
   // Column name without the stat, e.g. "PG_default_PG"
   base: string;
-  unitType: UnitType;
+  // null for parsing probability, which is not tied to a unit type
+  unitType: UnitType | null;
   measureType: MeasureType;
   directionality: Directionality | null;
   weighting: Weighting;
@@ -57,7 +61,7 @@ function describe(
   return `${unit} ${detail} (${variant.weighting}, ${position})`;
 }
 
-export const MEASURE_GROUPS: MeasureGroup[] = UNITS.flatMap((unitType) =>
+const UNIT_MEASURE_GROUPS: MeasureGroup[] = UNITS.flatMap((unitType) =>
   VARIANTS.flatMap((variant) => [
     ...Object.entries(CONSISTENCY_TARGETS).map(([target, directionality]) => ({
       base: `${unitType}_${variant.key}_${target}`,
@@ -80,20 +84,45 @@ export const MEASURE_GROUPS: MeasureGroup[] = UNITS.flatMap((unitType) =>
   ]),
 );
 
-export function columnName(base: string, stat: Stat): string {
-  return `${base}.${stat}`;
-}
+const PARSING_PROBABILITY_GROUPS: MeasureGroup[] = [
+  { base: "pp", weighting: "Type" as const },
+  { base: "pp_freq", weighting: "Token" as const },
+].map(({ base, weighting }) => ({
+  base,
+  unitType: null,
+  measureType: "Parsing Probability" as const,
+  directionality: null,
+  weighting,
+  positional: true,
+  label: `Parsing Probability (${weighting})`,
+}));
+
+export const MEASURE_GROUPS: MeasureGroup[] = [
+  ...UNIT_MEASURE_GROUPS,
+  ...PARSING_PROBABILITY_GROUPS,
+];
 
 const GROUPS_BY_BASE = new Map(MEASURE_GROUPS.map((group) => [group.base, group]));
+
+// "PG_default_PG" + "mean" -> "PG_default_PG.mean"; "pp_freq" + "min" -> "pp_freq_min"
+export function columnName(base: string, stat: Stat): string {
+  const group = GROUPS_BY_BASE.get(base);
+  return group?.measureType === "Parsing Probability" ? `${base}_${stat}` : `${base}.${stat}`;
+}
+
+const PARTS_BY_COLUMN = new Map(
+  MEASURE_GROUPS.flatMap((group) =>
+    STATS.map((stat) => [columnName(group.base, stat), { group, stat }] as const),
+  ),
+);
 
 // "PG_default_PG.mean" -> { group: <PG_default_PG>, statLabel: "Mean" }
 export function columnParts(
   column: string,
 ): { group: MeasureGroup; statLabel: string } | null {
-  const [base, stat] = column.split(".");
-  const group = GROUPS_BY_BASE.get(base);
-  if (!group) return null;
-  return { group, statLabel: stat === "mean" ? "Mean" : "Min" };
+  const parts = PARTS_BY_COLUMN.get(column);
+  if (!parts) return null;
+  return { group: parts.group, statLabel: parts.stat === "mean" ? "Mean" : "Min" };
 }
 
 // "PG_default_PG.mean" -> "PG Reading Consistency (Type, Positional) — Mean"

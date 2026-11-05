@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./EnglishToolkit.css";
 import Layout from "../components/Layout";
 import { parseWordFile } from "../data/csvParsing";
+import { GENERAL_VARIABLES } from "../data/phonologyMeasures";
 import {
   MEASURE_GROUPS,
   STATS,
@@ -23,10 +24,6 @@ type TableRowsState = Record<
   { label: string; selected: boolean; stats: TableRowStats; description?: string }
 >;
 
-type EnglishToolkitProps = {
-  mode?: "frequency-consistency" | "phonology-orthography";
-};
-
 const unitTypeOptions: { value: UnitType; label: string }[] = [
   { value: "PG", label: "Phoneme-Grapheme (PG)" },
   { value: "OR", label: "Onset-Rime (OR)" },
@@ -40,79 +37,19 @@ const directionOptions: { value: Directionality; label: string; detail: string }
 ];
 
 const toolkitInstructions =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
+  "Enter English words (or upload a list), choose the whole-word variables you want, then pick the sublexical Toolkit measures and click Apply. Every word comes from the English Sublexical Toolkit v2.0 word list; words outside that list are reported as not found. Select the summary statistics you need and click View Results to see and download the values.";
 
-const phonologyOptionGroups = [
-  {
-    title: "General",
-    options: [
-      "Frequency",
-      "Contextual Diversity",
-      "Familiarity",
-      "Age of Acquisition",
-    ],
-  },
-  {
-    title: "Orthographic",
-    options: [
-      "Orthographic Length",
-      "Graphotactic Probabilities",
-      "Orthographic Neighborhood",
-    ],
-  },
-  {
-    title: "Phonological",
-    options: [
-      "Phonological Length",
-      "Phonotactic Probabilities",
-      "Phonological Neighborhood",
-      "First Phoneme",
-      "IPA Transcription",
-    ],
-  },
-  {
-    title: "Semantic",
-    options: [
-      "Concreteness/Imageability",
-      "Polysemy",
-      "Number of Features",
-      "Specific Semantic Features",
-      "Affect",
-      "Semantic Neighborhood",
-      "Vector Representation",
-    ],
-  },
-  {
-    title: "Ortho-Phon",
-    options: ["Phonographic Neighborhood", "Consistency"],
-  },
-  {
-    title: "Morphology",
-    options: [
-      "Morphological Length",
-      "Frequency",
-      "Family Size",
-      "Percent More Frequent",
-      "Affix Length",
-      "Affix Productivity",
-    ],
-  },
-  {
-    title: "Response Variables",
-    options: [
-      "Visual Lexicon Decision",
-      "Auditory Lexical Decision",
-      "Reading Aloud",
-      "Semantic Decision",
-      "Recognition Memory",
-    ],
-  },
-] as const;
+const TOOLKIT_SOURCE =
+  "Computed by the English Sublexical Toolkit v2.0 from the phoneme-grapheme mappings of every word in its English word list. Token-weighted measures use SUBTLEX-US frequencies.";
+
+const measureTypeOptions: { value: MeasureType; detail?: string }[] = [
+  { value: "Frequency" },
+  { value: "Consistency" },
+  { value: "Parsing Probability", detail: "(how likely letters group into each grapheme)" },
+];
 
 // ---------- Component ----------
-export default function EnglishToolkit({
-  mode = "frequency-consistency",
-}: EnglishToolkitProps) {
+export default function EnglishToolkit() {
   const navigate = useNavigate();
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadedWords, setUploadedWords] = useState<string[]>([]);
@@ -127,8 +64,7 @@ export default function EnglishToolkit({
   const [directionalities, setDirectionalities] = useState<Directionality[]>([]);
   const [weightings, setWeightings] = useState<Weighting[]>([]);
   const [multiplePronunciations, setMultiplePronunciations] = useState<"Yes" | "No">("No");
-  const [phonologyFormat, setPhonologyFormat] = useState<"standard" | "onset-rime">("standard");
-  const [phonologyOptions, setPhonologyOptions] = useState<string[]>([]);
+  const [generalVariables, setGeneralVariables] = useState<string[]>([]);
 
   const [rows, setRows] = useState<TableRowsState>({});
 
@@ -185,8 +121,8 @@ export default function EnglishToolkit({
   // -------- Apply --------
   const handleApply = () => {
     const filtered = MEASURE_GROUPS.filter((m) =>
-      // Unit Type filter
-      (unitTypes.length === 0 || unitTypes.includes(m.unitType)) &&
+      // Unit Type filter (parsing probability has no unit type, so it always passes)
+      (unitTypes.length === 0 || m.unitType === null || unitTypes.includes(m.unitType)) &&
 
       // Measure Type filter
       (measureTypes.length === 0 || measureTypes.includes(m.measureType)) &&
@@ -222,9 +158,6 @@ export default function EnglishToolkit({
       .flatMap(([base, data]) =>
         STATS.filter((stat) => data.stats[stat]).map((stat) => columnName(base, stat)),
       );
-    const pendingPhonologyMeasures = phonologyOptions.map((optionId) =>
-      optionId.replace("::", " — "),
-    );
     const searchState = {
       words: [
         ...letterInput
@@ -237,50 +170,34 @@ export default function EnglishToolkit({
         .split(/[\n,]+/)
         .map((phoneme) => phoneme.trim())
         .filter(Boolean),
-      measures:
-        selectedMeasures.length > 0
-          ? selectedMeasures
-          : mode === "phonology-orthography"
-            ? pendingPhonologyMeasures
-            : [],
+      // Keep the general variables in the order they are listed on the page
+      general: GENERAL_VARIABLES.map((variable) => variable.id).filter((id) =>
+        generalVariables.includes(id),
+      ),
+      measures: selectedMeasures,
       multiplePronunciations,
     };
 
-    if (mode === "frequency-consistency") {
-      navigate("/english/frequency-consistency/results", { state: searchState });
-      return;
-    }
-
-    navigate(
-      phonologyFormat === "onset-rime"
-        ? "/english/phonology-orthography/results/onset-rime"
-        : "/english/phonology-orthography/results/standard",
-      { state: searchState },
-    );
+    navigate("/english/results", { state: searchState });
   };
 
+  const toggle = <T,>(list: T[], item: T, checked: boolean): T[] =>
+    checked ? [...list, item] : list.filter((other) => other !== item);
+
   return (
-    <Layout
-      variant="app"
-      pageClassName={mode === "phonology-orthography" ? "page-phonology" : undefined}
-      pageTitle="How to use this toolkit:"
-      pageIntro={toolkitInstructions}
-    >
-    <main className={`main-container${mode === "frequency-consistency" ? " toolkit-frequency" : " toolkit-phonology"}`}>
-      <aside className="left-sidebar">
-        <div className="input-section">
-          <h5 className="section-title">
-            {mode === "phonology-orthography" ? "Input" : "Letter Input"}
-          </h5>
-          <textarea
-            className="textarea-input"
-            placeholder="Enter input here..."
-            rows={4}
-            value={letterInput}
-            onChange={(event) => setLetterInput(event.target.value)}
-          />
-        </div>
-        {mode === "frequency-consistency" && (
+    <Layout variant="app" pageTitle="How to use this toolkit:" pageIntro={toolkitInstructions}>
+      <main className="main-container toolkit-frequency">
+        <aside className="left-sidebar">
+          <div className="input-section">
+            <h5 className="section-title">Letter Input</h5>
+            <textarea
+              className="textarea-input"
+              placeholder="Enter input here..."
+              rows={4}
+              value={letterInput}
+              onChange={(event) => setLetterInput(event.target.value)}
+            />
+          </div>
           <div className="input-section">
             <h5 className="section-title">Phoneme Input (optional)</h5>
             <textarea
@@ -291,106 +208,92 @@ export default function EnglishToolkit({
               onChange={(event) => setPhonemeInput(event.target.value)}
             />
           </div>
-        )}
-        <div className="input-section">
-          <h5 className="file-upload-title">
-            Upload a csv/txt file containing a list of words in the first column only:
-          </h5>
-          <div className="file-upload-container">
-            <label
-              className={`file-upload-label${isDragging ? " dragging" : ""}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleFileDrop}
-            >
-              <input
-                type="file"
-                accept=".csv,.txt"
-                className="file-upload-input"
-                onChange={handleFileChange}
-              />
-              <div className="upload-arrow">↑</div>
-              <span className="upload-text">Drag and drop files to upload</span>
-              <span className="upload-or">or</span>
-              <span className="browse-button">Browse</span>
-            </label>
+          <div className="input-section">
+            <h5 className="file-upload-title">
+              Upload a csv/txt file containing a list of words in the first column only:
+            </h5>
+            <div className="file-upload-container">
+              <label
+                className={`file-upload-label${isDragging ? " dragging" : ""}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+              >
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  className="file-upload-input"
+                  onChange={handleFileChange}
+                />
+                <div className="upload-arrow">↑</div>
+                <span className="upload-text">Drag and drop files to upload</span>
+                <span className="upload-or">or</span>
+                <span className="browse-button">Browse</span>
+              </label>
+            </div>
+            {fileName && (
+              <p className="file-name">
+                Uploaded: {fileName}
+                {uploadedWords.length > 0 &&
+                  ` (${uploadedWords.length} ${uploadedWords.length === 1 ? "word" : "words"})`}
+                <button type="button" className="file-remove" onClick={handleRemoveFile}>
+                  Remove
+                </button>
+              </p>
+            )}
+            {uploadError && <p className="file-error">{uploadError}</p>}
           </div>
-          {fileName && (
-            <p className="file-name">
-              Uploaded: {fileName}
-              {uploadedWords.length > 0 &&
-                ` (${uploadedWords.length} ${uploadedWords.length === 1 ? "word" : "words"})`}
-              <button type="button" className="file-remove" onClick={handleRemoveFile}>
-                Remove
-              </button>
-            </p>
-          )}
-          {uploadError && <p className="file-error">{uploadError}</p>}
-        </div>
 
-        {mode === "phonology-orthography" && (
-          <div className="sidebar-options">
-            <div className="input-section">
-              <h5 className="section-title">
-                <span className="required-mark">*</span>Multiple Pronunciations?
-              </h5>
-              <div className="sidebar-radio-row">
-                {["Yes", "No"].map((option) => (
-                  <label key={option} className="radio-item">
+          <div className="input-section">
+            <h5 className="section-title">Multiple Pronunciations?</h5>
+            <div className="radio-group">
+              {["Yes", "No"].map((option) => (
+                <label key={option} className="radio-item">
+                  <input
+                    type="radio"
+                    name="multiplePronunciations"
+                    value={option}
+                    checked={multiplePronunciations === option}
+                    onChange={(e) => setMultiplePronunciations(e.target.value as "Yes" | "No")}
+                    className="radio-input"
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <section className="right-content">
+          <div className="right-body">
+            <h2 className="main-title">General Variables</h2>
+            <p className="variable-source">Whole-word properties of each word.</p>
+
+            <div className="variable-section">
+              <div className="checkbox-group general-variables">
+                {GENERAL_VARIABLES.map((variable) => (
+                  <label key={variable.id} className="checkbox-item">
                     <input
-                      type="radio"
-                      name="multiplePronunciations"
-                      value={option}
-                      checked={multiplePronunciations === option}
+                      type="checkbox"
+                      checked={generalVariables.includes(variable.id)}
                       onChange={(e) =>
-                        setMultiplePronunciations(e.target.value as "Yes" | "No")
+                        setGeneralVariables(toggle(generalVariables, variable.id, e.target.checked))
                       }
-                      className="radio-input"
+                      className="checkbox-input"
                     />
-                    <span>{option}</span>
+                    <span>{variable.label}</span>
+                    <span className="option-detail">Source: {variable.source}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="input-section">
-              <h5 className="section-title">
-                <span className="required-mark">*</span>Sort By Onset and Rime?
-              </h5>
-              <div className="sidebar-radio-row">
-                {[
-                  ["onset-rime", "Yes"],
-                  ["standard", "No"],
-                ].map(([value, label]) => (
-                  <label key={value} className="radio-item">
-                    <input
-                      type="radio"
-                      name="phonologyFormat"
-                      value={value}
-                      checked={phonologyFormat === value}
-                      onChange={() =>
-                        setPhonologyFormat(value as "standard" | "onset-rime")
-                      }
-                      className="radio-input"
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </aside>
+            <h2 className="main-title toolkit-variables-title">Toolkit Variables</h2>
+            <p className="variable-source">{TOOLKIT_SOURCE}</p>
 
-      <section className="right-content">
-        <div className="right-body">
-        <h2 className="main-title">Variables</h2>
-
-        {mode === "frequency-consistency" ? (
-          <>
             <div className="variable-section">
               <h3 className="variable-title">Unit Type</h3>
               <div className="checkbox-group">
@@ -400,11 +303,7 @@ export default function EnglishToolkit({
                       type="checkbox"
                       checked={unitTypes.includes(option.value)}
                       onChange={(e) =>
-                        setUnitTypes(
-                          e.target.checked
-                            ? [...unitTypes, option.value]
-                            : unitTypes.filter((item) => item !== option.value),
-                        )
+                        setUnitTypes(toggle(unitTypes, option.value, e.target.checked))
                       }
                       className="checkbox-input"
                     />
@@ -414,49 +313,23 @@ export default function EnglishToolkit({
               </div>
             </div>
 
-            <div className="variable-row">
-              <div className="variable-section">
-                <h3 className="variable-title">Measure Type</h3>
-                <div className="checkbox-group">
-                  {(["Frequency", "Consistency"] as MeasureType[]).map((option) => (
-                    <label key={option} className="checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={measureTypes.includes(option)}
-                        onChange={(e) =>
-                          setMeasureTypes(
-                            e.target.checked
-                              ? [...measureTypes, option]
-                              : measureTypes.filter((item) => item !== option),
-                          )
-                        }
-                        className="checkbox-input"
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="variable-section">
-                <h3 className="variable-title">Multiple Pronunciations?</h3>
-                <div className="radio-group">
-                  {["Yes", "No"].map((option) => (
-                    <label key={option} className="radio-item">
-                      <input
-                        type="radio"
-                        name="multiplePronunciations"
-                        value={option}
-                        checked={multiplePronunciations === option}
-                        onChange={(e) =>
-                          setMultiplePronunciations(e.target.value as "Yes" | "No")
-                        }
-                        className="radio-input"
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
+            <div className="variable-section">
+              <h3 className="variable-title">Measure Type</h3>
+              <div className="checkbox-group">
+                {measureTypeOptions.map((option) => (
+                  <label key={option.value} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={measureTypes.includes(option.value)}
+                      onChange={(e) =>
+                        setMeasureTypes(toggle(measureTypes, option.value, e.target.checked))
+                      }
+                      className="checkbox-input"
+                    />
+                    <span>{option.value}</span>
+                    {option.detail && <span className="option-detail">{option.detail}</span>}
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -470,9 +343,7 @@ export default function EnglishToolkit({
                       checked={directionalities.includes(option.value)}
                       onChange={(e) =>
                         setDirectionalities(
-                          e.target.checked
-                            ? [...directionalities, option.value]
-                            : directionalities.filter((item) => item !== option.value),
+                          toggle(directionalities, option.value, e.target.checked),
                         )
                       }
                       className="checkbox-input"
@@ -492,13 +363,7 @@ export default function EnglishToolkit({
                     <input
                       type="checkbox"
                       checked={weightings.includes(option)}
-                      onChange={(e) =>
-                        setWeightings(
-                          e.target.checked
-                            ? [...weightings, option]
-                            : weightings.filter((item) => item !== option),
-                        )
-                      }
+                      onChange={(e) => setWeightings(toggle(weightings, option, e.target.checked))}
                       className="checkbox-input"
                     />
                     <span>{option}</span>
@@ -506,108 +371,69 @@ export default function EnglishToolkit({
                 ))}
               </div>
             </div>
-          </>
-        ) : (
-          <div className="phonology-variables">
-            {phonologyOptionGroups.map((group) => (
-              <section className="variable-section" key={group.title}>
-                <h3 className="variable-title">{group.title}</h3>
-                <div className="checkbox-group">
-                  {group.options.map((option) => {
-                    const optionId = `${group.title}::${option}`;
 
-                    return (
-                      <label className="checkbox-item" key={optionId}>
-                        <input
-                          type="checkbox"
-                          checked={phonologyOptions.includes(optionId)}
-                          onChange={(e) =>
-                            setPhonologyOptions(
-                              e.target.checked
-                                ? [...phonologyOptions, optionId]
-                                : phonologyOptions.filter((item) => item !== optionId),
-                            )
-                          }
-                          className="checkbox-input"
-                        />
-                        <span>{option}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
+            <div className="action-buttons">
+              <button className="action-button" onClick={handleApply}>
+                Apply
+              </button>
+              <button className="action-button" onClick={handleViewResults}>
+                View Results
+              </button>
+            </div>
 
-        {mode === "frequency-consistency" ? (
-          <>
-        <div className="action-buttons">
-          <button className="action-button" onClick={handleApply}>Apply</button>
-          <button className="action-button" onClick={handleViewResults}>View Results</button>
-        </div>
-
-        <div className="statistics-container">
-          <div className="statistics-header">
-            <h3 className="statistics-title">Select Summary Statistics</h3>
-          </div>
-          <div className="table-container">
-            <table className="statistics-table">
-              <thead className="table-header">
-                <tr>
-                  <th>Measure</th>
-                  <th>Mean</th>
-                  <th>Min</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(rows).map(([key, data]) => (
-                  <tr key={key} className={`table-row ${data.selected ? "selected" : ""}`}>
-                    <td className="table-cell">
-                      <label className="measure-label" title={data.description ?? ""}>
-                        <input
-                          type="checkbox"
-                          checked={data.selected}
-                          onChange={() => handleMeasureToggle(key)}
-                          className="checkbox-input"
-                        />
-                        <span className="measure-text">{data.label}</span>
-                      </label>
-                    </td>
-                    {STATS.map((statKey) => (
-                      <td key={statKey} className="table-cell center">
-                        <input
-                          type="checkbox"
-                          checked={data.stats[statKey]}
-                          onChange={() => handleStatToggle(key, statKey)}
-                          className="checkbox-input"
-                        />
-                      </td>
+            <div className="statistics-container">
+              <div className="statistics-header">
+                <h3 className="statistics-title">Select Summary Statistics</h3>
+              </div>
+              <div className="table-container">
+                <table className="statistics-table">
+                  <thead className="table-header">
+                    <tr>
+                      <th>Measure</th>
+                      <th>Mean</th>
+                      <th>Min</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(rows).map(([key, data]) => (
+                      <tr key={key} className={`table-row ${data.selected ? "selected" : ""}`}>
+                        <td className="table-cell">
+                          <label className="measure-label" title={data.description ?? ""}>
+                            <input
+                              type="checkbox"
+                              checked={data.selected}
+                              onChange={() => handleMeasureToggle(key)}
+                              className="checkbox-input"
+                            />
+                            <span className="measure-text">{data.label}</span>
+                          </label>
+                        </td>
+                        {STATS.map((statKey) => (
+                          <td key={statKey} className="table-cell center">
+                            <input
+                              type="checkbox"
+                              checked={data.stats[statKey]}
+                              onChange={() => handleStatToggle(key, statKey)}
+                              className="checkbox-input"
+                            />
+                          </td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-                {Object.keys(rows).length === 0 && (
-                  <tr>
-                    <td className="table-cell" colSpan={STATS.length + 1}>
-                      Choose options and click <strong>Apply</strong> to populate measures.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    {Object.keys(rows).length === 0 && (
+                      <tr>
+                        <td className="table-cell" colSpan={STATS.length + 1}>
+                          Choose options and click <strong>Apply</strong> to populate measures.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-          </>
-        ) : (
-          <div className="action-buttons submit-row">
-            <button className="action-button" type="button" onClick={handleViewResults}>
-              Submit
-            </button>
-          </div>
-        )}
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
     </Layout>
   );
 }

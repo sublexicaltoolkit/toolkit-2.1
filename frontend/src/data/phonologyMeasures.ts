@@ -47,31 +47,39 @@ export type ResultColumn = {
   percent?: boolean;
 };
 
-// Phonology & Orthography options (as "Group — Option") that have data so far.
-// Options not listed here are reported as "not available yet" on the results page.
-export const PHONOLOGY_COLUMNS: Record<string, ResultColumn[]> = {
-  "General — Frequency": [
-    { header: "Frequency (SUBTLEX-US count)", value: (e) => e.freq },
-  ],
-  "Orthographic — Orthographic Length": [
-    { header: "Orthographic Length", value: (e) => e.spelling.length },
-  ],
-  "Phonological — Phonological Length": [
-    { header: "Phonological Length", value: (e) => splitPhonemes(e.pronunciation).length },
-  ],
-  "Phonological — First Phoneme": [
-    { header: "First Phoneme", value: (e) => splitPhonemes(e.pronunciation)[0] ?? null },
-  ],
-  "Ortho-Phon — Consistency": [
-    {
-      header: "PG Reading Consistency — Mean",
-      value: (e) => e.measures["PG_default_PG.mean"] ?? null,
-      percent: true,
-    },
-    {
-      header: "PG Spelling Consistency — Mean",
-      value: (e) => e.measures["PG_default_GP.mean"] ?? null,
-      percent: true,
-    },
-  ],
+// Whole-word variables shown at the top of the toolkit page, with where each comes from.
+export type GeneralVariable = {
+  id: string;
+  label: string;
+  source: string;
+  column: ResultColumn;
 };
+
+export const GENERAL_VARIABLES: GeneralVariable[] = [
+  {
+    id: "frequency",
+    label: "Whole-Word Frequency",
+    source: "SUBTLEX-US word counts (Brysbaert & New, 2009)",
+    column: { header: "Whole-Word Frequency", group: "General", value: (e) => e.freq },
+  },
+  {
+    id: "orthographic-length",
+    label: "Orthographic Length",
+    source: "Number of letters in the spelling",
+    column: {
+      header: "Orthographic Length",
+      group: "General",
+      value: (e) => e.spelling.length,
+    },
+  },
+  {
+    id: "phonological-length",
+    label: "Phonological Length",
+    source: "Number of phonemes in the Toolkit pronunciation",
+    column: {
+      header: "Phonological Length",
+      group: "General",
+      value: (e) => splitPhonemes(e.pronunciation).length,
+    },
+  },
+];

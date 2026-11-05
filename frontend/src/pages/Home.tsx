@@ -29,13 +29,13 @@ export default function Home() {
           <div className="card-grid">
             <article className="card">
               <h3 className="card-title">English Toolkit</h3>
-              <p className="card-subtitle">Includes:</p>
-              <ul className="card-list">
-                <li>Frequency and Consistency Log</li>
-                <li>Phonology and Orthography</li>
-              </ul>
+              <p className="card-subtitle">
+                Whole-word frequency, orthographic and phonological length, plus sublexical
+                frequency, consistency and parsing probability for words in the Toolkit's
+                English word list.
+              </p>
               <Link to="/english" className="btn">
-                Visit page
+                Open toolkit
               </Link>
             </article>
           </div>

@@ -26,8 +26,9 @@ describe("onsetRime", () => {
 });
 
 describe("measure columns", () => {
-  it("has 80 measures: 32 consistency and 48 frequency", () => {
-    expect(MEASURE_GROUPS).toHaveLength(80);
+  it("has 82 measures: 32 consistency, 48 frequency and 2 parsing probability", () => {
+    expect(MEASURE_GROUPS).toHaveLength(82);
+    expect(MEASURE_GROUPS.filter((g) => g.measureType === "Parsing Probability")).toHaveLength(2);
     expect(MEASURE_GROUPS.filter((g) => g.measureType === "Consistency")).toHaveLength(32);
     expect(MEASURE_GROUPS.filter((g) => g.measureType === "Frequency")).toHaveLength(48);
   });
@@ -41,6 +42,8 @@ describe("measure columns", () => {
     ["PG_default_PG.mean", "PG Reading Consistency (Type, Positional) — Mean"],
     ["ONC_freq_noposition_GP.min", "ONC Spelling Consistency (Token, Non-positional) — Min"],
     ["OR_default_G_freq.mean", "OR Grapheme Frequency (Type, Positional) — Mean"],
+    ["pp_mean", "Parsing Probability (Type) — Mean"],
+    ["pp_freq_min", "Parsing Probability (Token) — Min"],
     ["not_a_column", "not_a_column"],
   ])("labels %s", (column, label) => {
     expect(columnLabel(column)).toBe(label);
