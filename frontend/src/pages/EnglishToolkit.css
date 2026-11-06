@@ -886,6 +886,96 @@
   color: #6b7280;
 }
 
+/* Phoneme input with IPA palette */
+.phoneme-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.phoneme-header .section-title {
+  display: block;
+  margin: 0;
+}
+
+.phoneme-header .optional {
+  font-weight: 400;
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.ipa-toggle {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #1f5f8b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ipa-codes {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #374151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-word;
+}
+
+.ipa-palette {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #f3f5f6;
+}
+
+.ipa-group-title {
+  margin: 0.35rem 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.ipa-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.ipa-key {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.35rem;
+  background: #ffffff;
+  font-family: "Charis SIL", "Doulos SIL", "Times New Roman", serif;
+  font-size: 1rem;
+  color: #111827;
+  cursor: pointer;
+}
+
+.ipa-key:hover,
+.ipa-key:focus-visible {
+  border-color: #1f7ec4;
+  background: #eaf4fb;
+}
+
+.ipa-key-wide {
+  font-size: 0.85rem;
+}
+
+.ipa-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .page-phonology {
