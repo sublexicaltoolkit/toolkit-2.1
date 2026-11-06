@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./EnglishToolkit.css";
 import Layout from "../components/Layout";
+import PhonemePalette from "../components/PhonemePalette";
+import { ipaToToolkit } from "../data/ipa";
 import { parseWordFile } from "../data/csvParsing";
 import { GENERAL_VARIABLES } from "../data/phonologyMeasures";
 import {
@@ -36,6 +38,13 @@ const directionOptions: { value: Directionality; label: string; detail: string }
   { value: "Spelling", label: "Spelling", detail: "(Phoneme → Grapheme)" },
 ];
 
+type Position = "Positional" | "Non-positional";
+
+const positionOptions: { value: Position; detail: string }[] = [
+  { value: "Positional", detail: "(units counted by syllable position)" },
+  { value: "Non-positional", detail: "(position ignored)" },
+];
+
 const toolkitInstructions =
   "Enter English words (or upload a list), choose the whole-word variables you want, then pick the sublexical Toolkit measures and click Apply. Every word comes from the English Sublexical Toolkit v2.0 word list; words outside that list are reported as not found. Select the summary statistics you need and click View Results to see and download the values.";
 
@@ -63,6 +72,7 @@ export default function EnglishToolkit() {
   const [measureTypes, setMeasureTypes] = useState<MeasureType[]>([]);
   const [directionalities, setDirectionalities] = useState<Directionality[]>([]);
   const [weightings, setWeightings] = useState<Weighting[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [multiplePronunciations, setMultiplePronunciations] = useState<"Yes" | "No">("No");
   const [generalVariables, setGeneralVariables] = useState<string[]>([]);
 
@@ -130,6 +140,13 @@ export default function EnglishToolkit() {
       // Weighting filter
       (weightings.length === 0 || weightings.includes(m.weighting)) &&
 
+      // Position filter (parsing probability has no position variant, so it always passes)
+      (
+        positions.length === 0 ||
+        m.positional === null ||
+        positions.includes(m.positional ? "Positional" : "Non-positional")
+      ) &&
+
       // Directionality filter: only apply if selected, but allow null (Frequency rows)
       (
         directionalities.length === 0 ||
@@ -168,7 +185,7 @@ export default function EnglishToolkit() {
       ],
       phonemes: phonemeInput
         .split(/[\n,]+/)
-        .map((phoneme) => phoneme.trim())
+        .map((phoneme) => ipaToToolkit(phoneme.trim()))
         .filter(Boolean),
       // Keep the general variables in the order they are listed on the page
       general: GENERAL_VARIABLES.map((variable) => variable.id).filter((id) =>
@@ -198,16 +215,7 @@ export default function EnglishToolkit() {
               onChange={(event) => setLetterInput(event.target.value)}
             />
           </div>
-          <div className="input-section">
-            <h5 className="section-title">Phoneme Input (optional)</h5>
-            <textarea
-              className="textarea-input"
-              placeholder="Enter input here..."
-              rows={4}
-              value={phonemeInput}
-              onChange={(event) => setPhonemeInput(event.target.value)}
-            />
-          </div>
+          <PhonemePalette value={phonemeInput} onChange={setPhonemeInput} />
           <div className="input-section">
             <h5 className="file-upload-title">
               Upload a csv/txt file containing a list of words in the first column only:
@@ -294,81 +302,96 @@ export default function EnglishToolkit() {
             <h2 className="main-title toolkit-variables-title">Toolkit Variables</h2>
             <p className="variable-source">{TOOLKIT_SOURCE}</p>
 
-            <div className="variable-section">
-              <h3 className="variable-title">Unit Type</h3>
-              <div className="checkbox-group">
-                {unitTypeOptions.map((option) => (
-                  <label key={option.value} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={unitTypes.includes(option.value)}
-                      onChange={(e) =>
-                        setUnitTypes(toggle(unitTypes, option.value, e.target.checked))
-                      }
-                      className="checkbox-input"
-                    />
-                    <span>{option.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <div className="variable-row">
+              <div className="variable-column">
+                <div className="variable-section">
+                  <h3 className="variable-title">Unit Type</h3>
+                  <div className="checkbox-group">
+                    {unitTypeOptions.map((option) => (
+                      <label key={option.value} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={unitTypes.includes(option.value)}
+                          onChange={(e) => setUnitTypes(toggle(unitTypes, option.value, e.target.checked))}
+                          className="checkbox-input"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="variable-section">
-              <h3 className="variable-title">Measure Type</h3>
-              <div className="checkbox-group">
-                {measureTypeOptions.map((option) => (
-                  <label key={option.value} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={measureTypes.includes(option.value)}
-                      onChange={(e) =>
-                        setMeasureTypes(toggle(measureTypes, option.value, e.target.checked))
-                      }
-                      className="checkbox-input"
-                    />
-                    <span>{option.value}</span>
-                    {option.detail && <span className="option-detail">{option.detail}</span>}
-                  </label>
-                ))}
+                <div className="variable-section">
+                  <h3 className="variable-title">Measure Type</h3>
+                  <div className="checkbox-group">
+                    {measureTypeOptions.map((option) => (
+                      <label key={option.value} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={measureTypes.includes(option.value)}
+                          onChange={(e) => setMeasureTypes(toggle(measureTypes, option.value, e.target.checked))}
+                          className="checkbox-input"
+                        />
+                        <span>{option.value}</span>
+                        {option.detail && <span className="option-detail">{option.detail}</span>}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+              <div className="variable-column">
+                <div className="variable-section">
+                  <h3 className="variable-title">Directionality</h3>
+                  <div className="checkbox-group">
+                    {directionOptions.map((option) => (
+                      <label key={option.value} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={directionalities.includes(option.value)}
+                          onChange={(e) => setDirectionalities(toggle(directionalities, option.value, e.target.checked))}
+                          className="checkbox-input"
+                        />
+                        <span>{option.label}</span>
+                        <span className="option-detail">{option.detail}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="variable-section">
-              <h3 className="variable-title">Directionality</h3>
-              <div className="checkbox-group">
-                {directionOptions.map((option) => (
-                  <label key={option.value} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={directionalities.includes(option.value)}
-                      onChange={(e) =>
-                        setDirectionalities(
-                          toggle(directionalities, option.value, e.target.checked),
-                        )
-                      }
-                      className="checkbox-input"
-                    />
-                    <span>{option.label}</span>
-                    <span className="option-detail">{option.detail}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+                <div className="variable-section">
+                  <h3 className="variable-title">Weighting</h3>
+                  <div className="checkbox-group">
+                    {(["Token", "Type"] as Weighting[]).map((option) => (
+                      <label key={option} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={weightings.includes(option)}
+                          onChange={(e) => setWeightings(toggle(weightings, option, e.target.checked))}
+                          className="checkbox-input"
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="variable-section">
-              <h3 className="variable-title">Weighting</h3>
-              <div className="checkbox-group">
-                {(["Token", "Type"] as Weighting[]).map((option) => (
-                  <label key={option} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={weightings.includes(option)}
-                      onChange={(e) => setWeightings(toggle(weightings, option, e.target.checked))}
-                      className="checkbox-input"
-                    />
-                    <span>{option}</span>
-                  </label>
-                ))}
+                <div className="variable-section">
+                  <h3 className="variable-title">Position</h3>
+                  <div className="checkbox-group">
+                    {positionOptions.map((option) => (
+                      <label key={option.value} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={positions.includes(option.value)}
+                          onChange={(e) => setPositions(toggle(positions, option.value, e.target.checked))}
+                          className="checkbox-input"
+                        />
+                        <span>{option.value}</span>
+                        <span className="option-detail">{option.detail}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

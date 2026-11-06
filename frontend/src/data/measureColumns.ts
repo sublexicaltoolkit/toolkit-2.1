@@ -24,7 +24,8 @@ export type MeasureGroup = {
   measureType: MeasureType;
   directionality: Directionality | null;
   weighting: Weighting;
-  positional: boolean;
+  // null for parsing probability, which has no positional/non-positional variant
+  positional: boolean | null;
   label: string;
 };
 
@@ -93,7 +94,7 @@ const PARSING_PROBABILITY_GROUPS: MeasureGroup[] = [
   measureType: "Parsing Probability" as const,
   directionality: null,
   weighting,
-  positional: true,
+  positional: null,
   label: `Parsing Probability (${weighting})`,
 }));
 
