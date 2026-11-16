@@ -13,7 +13,8 @@ import {
   type Directionality,
   type MeasureType,
   type Stat,
-  type UnitType,
+  type UnitGranularity,
+  type UnitModality,
   type Weighting,
 } from "../data/measureColumns";
 
@@ -26,11 +27,18 @@ type TableRowsState = Record<
   { label: string; selected: boolean; stats: TableRowStats; description?: string }
 >;
 
-const unitTypeOptions: { value: UnitType; label: string }[] = [
+const granularityOptions: { value: UnitGranularity; label: string }[] = [
   { value: "PG", label: "Phoneme-Grapheme (PG)" },
-  { value: "OR", label: "Onset-Rime (OR)" },
-  { value: "OC", label: "Onset-Coda (OC)" },
   { value: "ONC", label: "Onset-Nucleus-Coda (ONC)" },
+  { value: "OC", label: "Oncleus-Coda (OC)" },
+  { value: "OR", label: "Onset-Rime (OR)" },
+];
+
+// Modality only applies to frequency; consistency always pairs sound and spelling.
+const modalityOptions: { value: UnitModality; label: string; detail: string }[] = [
+  { value: "Orthographic", label: "Orthographic", detail: "(grapheme only)" },
+  { value: "Phonological", label: "Phonological", detail: "(phoneme only)" },
+  { value: "Ortho-Phono", label: "Ortho-Phono", detail: "(phoneme-grapheme pair)" },
 ];
 
 const directionOptions: { value: Directionality; label: string; detail: string }[] = [
@@ -68,7 +76,8 @@ export default function EnglishToolkit() {
   const [phonemeInput, setPhonemeInput] = useState("");
 
   // Multi-select state
-  const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
+  const [granularities, setGranularities] = useState<UnitGranularity[]>([]);
+  const [modalities, setModalities] = useState<UnitModality[]>([]);
   const [measureTypes, setMeasureTypes] = useState<MeasureType[]>([]);
   const [directionalities, setDirectionalities] = useState<Directionality[]>([]);
   const [weightings, setWeightings] = useState<Weighting[]>([]);
@@ -131,8 +140,15 @@ export default function EnglishToolkit() {
   // -------- Apply --------
   const handleApply = () => {
     const filtered = MEASURE_GROUPS.filter((m) =>
-      // Unit Type filter (parsing probability has no unit type, so it always passes)
-      (unitTypes.length === 0 || m.unitType === null || unitTypes.includes(m.unitType)) &&
+      // Unit Granularity filter (parsing probability has no granularity, so it always passes)
+      (
+        granularities.length === 0 ||
+        m.granularity === null ||
+        granularities.includes(m.granularity)
+      ) &&
+
+      // Unit Modality filter: only frequency has a modality, so other measures always pass
+      (modalities.length === 0 || m.modality === null || modalities.includes(m.modality)) &&
 
       // Measure Type filter
       (measureTypes.length === 0 || measureTypes.includes(m.measureType)) &&
@@ -305,17 +321,40 @@ export default function EnglishToolkit() {
             <div className="variable-row">
               <div className="variable-column">
                 <div className="variable-section">
-                  <h3 className="variable-title">Unit Type</h3>
+                  <h3 className="variable-title">Unit Granularity</h3>
                   <div className="checkbox-group">
-                    {unitTypeOptions.map((option) => (
+                    {granularityOptions.map((option) => (
                       <label key={option.value} className="checkbox-item">
                         <input
                           type="checkbox"
-                          checked={unitTypes.includes(option.value)}
-                          onChange={(e) => setUnitTypes(toggle(unitTypes, option.value, e.target.checked))}
+                          checked={granularities.includes(option.value)}
+                          onChange={(e) =>
+                            setGranularities(toggle(granularities, option.value, e.target.checked))
+                          }
                           className="checkbox-input"
                         />
                         <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="variable-section">
+                  <h3 className="variable-title">Unit Modality</h3>
+                  <p className="option-detail">Frequency measures only</p>
+                  <div className="checkbox-group">
+                    {modalityOptions.map((option) => (
+                      <label key={option.value} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={modalities.includes(option.value)}
+                          onChange={(e) =>
+                            setModalities(toggle(modalities, option.value, e.target.checked))
+                          }
+                          className="checkbox-input"
+                        />
+                        <span>{option.label}</span>
+                        <span className="option-detail">{option.detail}</span>
                       </label>
                     ))}
                   </div>

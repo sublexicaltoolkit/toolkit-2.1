@@ -8,9 +8,17 @@
 //   stat:    only mean and min are shown
 //
 // Parsing probability (PP) columns are named differently: pp_<stat> (type weighted)
-// and pp_freq_<stat> (token weighted). They have no unit type or direction.
+// and pp_freq_<stat> (token weighted). They have no unit granularity, modality or direction.
+//
+// A unit is described on two separate axes:
+//   granularity: how big the chunk is (PG, ONC, OC, OR)
+//   modality:    which side of the unit is counted -- the spelling only (orthographic),
+//                the sound only (phonological), or the sound-spelling pair (ortho-phono).
+// Modality only varies for frequency. Consistency always relates sound and spelling,
+// so it is always ortho-phono and has no modality choice.
 
-export type UnitType = "PG" | "OR" | "OC" | "ONC";
+export type UnitGranularity = "PG" | "OR" | "OC" | "ONC";
+export type UnitModality = "Orthographic" | "Phonological" | "Ortho-Phono";
 export type MeasureType = "Frequency" | "Consistency" | "Parsing Probability";
 export type Directionality = "Reading" | "Spelling";
 export type Weighting = "Token" | "Type";
@@ -19,8 +27,10 @@ export type Stat = "mean" | "min";
 export type MeasureGroup = {
   // Column name without the stat, e.g. "PG_default_PG"
   base: string;
-  // null for parsing probability, which is not tied to a unit type
-  unitType: UnitType | null;
+  // null for parsing probability, which is not tied to a unit granularity
+  granularity: UnitGranularity | null;
+  // Only set for frequency; consistency is always a sound-spelling pairing
+  modality: UnitModality | null;
   measureType: MeasureType;
   directionality: Directionality | null;
   weighting: Weighting;
@@ -31,7 +41,7 @@ export type MeasureGroup = {
 
 export const STATS: Stat[] = ["mean", "min"];
 
-const UNITS: UnitType[] = ["PG", "ONC", "OC", "OR"];
+const GRANULARITIES: UnitGranularity[] = ["PG", "ONC", "OC", "OR"];
 
 const VARIANTS: { key: string; weighting: Weighting; positional: boolean }[] = [
   { key: "default", weighting: "Type", positional: true },
@@ -47,14 +57,14 @@ const CONSISTENCY_TARGETS: Record<string, Directionality> = {
   GP: "Spelling",
 };
 
-const FREQUENCY_TARGETS: Record<string, string> = {
-  PG_freq: "Phoneme-Grapheme",
-  G_freq: "Grapheme",
-  P_freq: "Phoneme",
+const FREQUENCY_TARGETS: Record<string, UnitModality> = {
+  PG_freq: "Ortho-Phono",
+  G_freq: "Orthographic",
+  P_freq: "Phonological",
 };
 
 function describe(
-  unit: UnitType,
+  unit: UnitGranularity,
   variant: (typeof VARIANTS)[number],
   detail: string,
 ): string {
@@ -62,25 +72,27 @@ function describe(
   return `${unit} ${detail} (${variant.weighting}, ${position})`;
 }
 
-const UNIT_MEASURE_GROUPS: MeasureGroup[] = UNITS.flatMap((unitType) =>
+const UNIT_MEASURE_GROUPS: MeasureGroup[] = GRANULARITIES.flatMap((granularity) =>
   VARIANTS.flatMap((variant) => [
     ...Object.entries(CONSISTENCY_TARGETS).map(([target, directionality]) => ({
-      base: `${unitType}_${variant.key}_${target}`,
-      unitType,
+      base: `${granularity}_${variant.key}_${target}`,
+      granularity,
+      modality: null,
       measureType: "Consistency" as const,
       directionality,
       weighting: variant.weighting,
       positional: variant.positional,
-      label: describe(unitType, variant, `${directionality} Consistency`),
+      label: describe(granularity, variant, `${directionality} Consistency`),
     })),
-    ...Object.entries(FREQUENCY_TARGETS).map(([target, name]) => ({
-      base: `${unitType}_${variant.key}_${target}`,
-      unitType,
+    ...Object.entries(FREQUENCY_TARGETS).map(([target, modality]) => ({
+      base: `${granularity}_${variant.key}_${target}`,
+      granularity,
+      modality,
       measureType: "Frequency" as const,
       directionality: null,
       weighting: variant.weighting,
       positional: variant.positional,
-      label: describe(unitType, variant, `${name} Frequency`),
+      label: describe(granularity, variant, `${modality} Frequency`),
     })),
   ]),
 );
@@ -90,7 +102,8 @@ const PARSING_PROBABILITY_GROUPS: MeasureGroup[] = [
   { base: "pp_freq", weighting: "Token" as const },
 ].map(({ base, weighting }) => ({
   base,
-  unitType: null,
+  granularity: null,
+  modality: null,
   measureType: "Parsing Probability" as const,
   directionality: null,
   weighting,

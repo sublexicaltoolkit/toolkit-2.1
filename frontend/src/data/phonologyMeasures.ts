@@ -14,7 +14,8 @@ const CONSONANTS = [
 const ALL_PHONEMES = [...VOWELS, ...CONSONANTS];
 export const VOWEL_SET = new Set(VOWELS);
 
-// Split a pronunciation like "skul" into phonemes ["s", "k", "u", "l"].
+// Split a pronunciation into map_PG() units: "skul" -> ["s", "k", "u", "l"], "kjut" -> ["k", "ju", "t"].
+// Use phonemes() to count sounds.
 export function splitPhonemes(pronunciation: string): string[] {
   const phonemes: string[] = [];
   let rest = pronunciation;
@@ -24,6 +25,24 @@ export function splitPhonemes(pronunciation: string): string[] {
     rest = rest.slice(match.length);
   }
   return phonemes;
+}
+
+// map_PG() keeps these two-phoneme sequences together because each one is spelled by a
+// single grapheme (cute = c+u+te, exam = e+x+a+m). They are still two sounds each.
+const MULTI_PHONEME_UNITS: Record<string, string[]> = {
+  je: ["j", "e"],
+  j3r: ["j", "3r"],
+  ju: ["j", "u"],
+  jU: ["j", "U"],
+  gz: ["g", "z"],
+  kS: ["k", "S"],
+  nj: ["n", "j"],
+};
+
+// Split a pronunciation into individual phonemes, breaking up the two-phoneme units above:
+// "kjut" -> ["k", "j", "u", "t"].
+export function phonemes(pronunciation: string): string[] {
+  return splitPhonemes(pronunciation).flatMap((unit) => MULTI_PHONEME_UNITS[unit] ?? [unit]);
 }
 
 // Onset = consonants before the first vowel, rime = everything after.
@@ -79,7 +98,7 @@ export const GENERAL_VARIABLES: GeneralVariable[] = [
     column: {
       header: "Phonological Length",
       group: "General",
-      value: (e) => splitPhonemes(e.pronunciation).length,
+      value: (e) => phonemes(e.pronunciation).length,
     },
   },
 ];

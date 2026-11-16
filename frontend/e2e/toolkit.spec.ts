@@ -52,6 +52,25 @@ test("shows consistency values for typed words", async ({ page }) => {
   await expect(page.locator(".results-table tbody tr")).toHaveCount(3);
 });
 
+test("filters frequency by unit modality", async ({ page }) => {
+  await page.goto("/english");
+  await page.getByLabel("Onset-Nucleus-Coda (ONC)").check();
+  await page.getByRole("checkbox", { name: "Frequency", exact: true }).check();
+  await page.getByRole("checkbox", { name: "Orthographic (grapheme only)" }).check();
+  await page.getByRole("button", { name: "Apply" }).click();
+
+  // ONC grapheme-only frequency: one row per weighting x position variant
+  const rows = page.locator(".statistics-table tbody tr");
+  await expect(rows).toHaveCount(4);
+  for (const label of await rows.allTextContents()) {
+    expect(label).toContain("ONC Orthographic Frequency");
+  }
+
+  await page.getByRole("checkbox", { name: "Phonological (phoneme only)" }).check();
+  await page.getByRole("button", { name: "Apply" }).click();
+  await expect(rows).toHaveCount(8);
+});
+
 test("puts general variables before toolkit measures", async ({ page }) => {
   await page.goto("/english");
   await page.locator(".textarea-input").first().fill("street");
@@ -61,7 +80,7 @@ test("puts general variables before toolkit measures", async ({ page }) => {
   await page.getByRole("checkbox", { name: /^Parsing Probability/ }).check();
   await page.getByRole("button", { name: "Apply" }).click();
 
-  // Parsing probability has no unit type or direction: one row per weighting
+  // Parsing probability has no unit granularity, modality or direction: one row per weighting
   await expect(page.locator(".statistics-table tbody tr")).toHaveCount(2);
   await page.getByRole("button", { name: "View Results" }).click();
 
